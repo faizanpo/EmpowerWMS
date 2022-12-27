@@ -160,7 +160,7 @@ class ProductsWoo(models.Model):
                                         "categ_id":categ_id.id,
                                         # 'qty_available': float(wo['stock_quantity']),
                                         # 'price': float(wo['regular_price']),
-                                        'list_price': float(wo['regular_price']),
+                                        'list_price': float(wo['regular_price']) if wo['regular_price'] else 0,
                                         'image_1920':pass_image(wo['images'][0]['src']) if wo['images'] else False
                                     }
                                     created= prodobj.create(prodcreate)

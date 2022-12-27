@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- <record id="action_add_product_woocommerce" model="ir.actions.server">
+        <field name="name">Refresh Button</field>
+        <field name="model_id" ref="woocommerce_custom.model_woocommerce_products"/>
+        <field name="state">code</field>
+        <field name="code">
+            action = model.create_product()
+        </field>
+    </record> -->
+
+<!--   <menuitem name="Woocommerce"-->
+<!--        id="woocommerce_product_add"-->
+<!--        parent="sale.sale_menu_root"-->
+<!--        sequence="1"-->
+<!--        action="action_add_product_woocommerce"-->
+<!--   />-->
+
+</odoo>

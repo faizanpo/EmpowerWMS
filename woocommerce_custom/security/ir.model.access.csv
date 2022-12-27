@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_woocommerce_products,access.woocommerce.products,model_woocommerce_products,,1,1,1,1
+access_woocommerce_main,access.woocommerce.main,model_woocommerce_main,,1,1,1,1
+access_woocommerce_product_logs,access.woocommerce.product.logs,model_woocommerce_product_logs,,1,1,1,1
+access_woocommerce_product_down_logs,access.woocommerce.product.down.logs,model_woocommerce_product_down_logs,,1,1,1,1
+access_woocommerce_orders_logs,access.woocommerce.orders.logs,model_woocommerce_orders_logs,,1,1,1,1
+access_woocommerce_orders_status_logs,access.woocommerce.orders.status.logs,model_woocommerce_orders_status_logs,,1,1,1,1
+access_woocommerce_product_update_logs,access.woocommerce.product.update.logs,model_woocommerce_product_update_logs,,1,1,1,1

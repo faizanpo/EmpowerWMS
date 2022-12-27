@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="woocommerce_logs_tree" model="ir.ui.view">
+        <field name="name">woocommerce.product.logs.tree</field>
+        <field name="model">woocommerce.product.logs</field>
+        <field name="arch" type="xml">
+            <tree string="Logs">
+                <field name="create_date"/>
+                <field name="odoo_id"/>
+                <field name="woo_id"/>
+                <field name="sku"/>
+                <field name="status"/>
+                <field name="details"/>
+            </tree>
+        </field>
+    </record>
+
+
+
+    <record id="view_report_volume_summery_kanban" model="ir.ui.view">
+        <field name="name">woocommerce.main.kanban</field>
+        <field name="model">woocommerce.main</field>
+        <field name="arch" type="xml">
+            <kanban>
+                <field name="color"/>
+                <field name="name"/>
+                <field name="url"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <div t-attf-class="#{kanban_color(record.color.raw_value)} oe_kanban_global_click o_has_icon oe_kanban_content oe_kanban_card">
+                            <t t-name="kanban-box">
+                                <div class="oe_module_vignette">
+                                    <h1>
+                                       <field name="name"/>
+                                    </h1>
+                                    <span style="color:green;">
+                                        <field name="url"/>
+                                    </span>
+                                </div>
+                            </t>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_woocommerce_main" model="ir.ui.view">
+        <field name="name">woocommerce.main.form</field>
+        <field name="model">woocommerce.main</field>
+        <field name="arch" type="xml">
+            <form string="Add Instance">
+
+                <sheet>
+                  <notebook>
+                    <page string="Credentials">
+                      <group>
+                        <field name="name"/>
+                        <field name="url"/>
+                        <field name="consumer_key"/>
+                        <field name="consumer_secret"/>
+                        <field name='company_id' />
+
+                    </group>
+                    </page>
+                    <page string="Upload Products">
+                        <button string="Force Run" name="upload_product" class="btn-primary" type="object"></button>
+                      <group>
+                          <field name="product_w_o_active"/>
+
+
+                          <field name="product_w_o_log_ids" options="{'no_create':True}" position="attributes">
+                              <tree string="Logs">
+                                  <field name="create_date"/>
+                                    <field name="odoo_id"/>
+                                    <field name="woo_id"/>
+                                    <field name="sku"/>
+                                    <field name="status"/>
+                                    <field name="details"/>
+                              </tree>
+                          </field>
+                      </group>
+
+                    </page>
+                    <page string="Download Products">
+                        <button string="Force Run" name="download_product" class="btn-primary" type="object"></button>
+
+                      <group>
+                          <field name="product_o_w_active"/>
+                            <field name="product_o_w_from_date"/>
+                          <field name="product_o_w_log_ids" options="{'no_create':True}" position="attributes">
+                              <tree string="Logs">
+                                  <field name="create_date"/>
+                                    <field name="odoo_id"/>
+                                    <field name="woo_id"/>
+                                    <field name="sku"/>
+                                    <field name="status"/>
+                                    <field name="details"/>
+                              </tree>
+                          </field>
+                      </group>
+
+                    </page>
+                    <page string="Download Orders">
+                        <button string="Force Run" name="download_orders" class="btn-primary" type="object"></button>
+                      <group>
+                          <field name="orders_w_o_active"/>
+                          <field name="orders_w_o_from_date"></field>
+
+                          <field name="orers_w_o_log_ids" options="{'no_create':True}" position="attributes">
+                                <tree string="Logs">
+                                    <field name="create_date"/>
+                                    <field name="odoo_id"/>
+                                    <field name="woo_id"/>
+                                    <field name="customer_name"/>
+                                    <field name="status"/>
+                                    <field name="details"/>
+                                </tree>
+                          </field>
+                      </group>
+
+                    </page>
+                    <page string="Update Products">
+                        <button string="Force Run" name="update_product" class="btn-primary" type="object"></button>
+                      <group>
+                          <field name="produpdate_o_w_active"/>
+                          <field name="produpdate_o_w_price"/>
+                          <field name="produpdate_o_w_inventory"/>
+
+                          <field name="produpdate_o_w_log_ids" options="{'no_create':True}" position="attributes">
+                            <tree string="Logs">
+                                <field name="create_date"/>
+                                <field name="odoo_id"/>
+                                <field name="woo_id"/>
+                                <field name="sku"/>
+                                <field name="status"/>
+                                <field name="details"/>
+                            </tree>
+                          </field>
+                      </group>
+                    </page>
+
+                    <page string="Update Orders">
+                        <button string="Force Run" name="update_status" class="btn-primary" type="object"></button>
+                      <group>
+                          <field name="orders_status_w_o_active"/>
+                          <field name="orers_w_o_status_from_date"></field>
+
+                          <field name="orers_w_o_status_log_ids" options="{'no_create':True}" position="attributes">
+                            <tree string="Logs">
+                                <field name="create_date"/>
+                                <field name="woo_id"/>
+                                <field name="odoo_id"/>
+                                <field name="status"/>
+                                <field name="details"/>
+                            </tree>
+                          </field>
+                      </group>
+                    </page>
+
+                    <page string='Update Categories'>
+                        <button string="Force Run" name="update_categories" class="btn-primary" type="object" />
+                    </page>
+                  </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_add_product_woocommerce" model="ir.actions.act_window">
+        <field name="name">Add New Instance</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">woocommerce.main</field>
+        <field name="view_mode">kanban,form,tree</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Instance Found
+            </p>
+        </field>
+    </record>
+
+    <record id="cron_product_download" model="ir.cron">
+        <field name="name">Product Download Action</field>
+        <field name="model_id" ref="model_woocommerce_main"/>
+        <field name="state">code</field>
+        <field name="code">model.run_product_download()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name='interval_number'>10</field>
+        <field name='interval_type'>minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
+
+       <record id="cron_product_upload" model="ir.cron">
+        <field name="name">Product Upload Action</field>
+        <field name="model_id" ref="model_woocommerce_main"/>
+        <field name="state">code</field>
+        <field name="code">model.run_product_upload()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name='interval_number'>5</field>
+        <field name='interval_type'>minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
+       <record id="cron_product_update" model="ir.cron">
+        <field name="name">Product Update Action</field>
+        <field name="model_id" ref="model_woocommerce_main"/>
+        <field name="state">code</field>
+        <field name="code">model.run_product_update()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name='interval_number'>5</field>
+        <field name='interval_type'>minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
+    <record id="cron_orders_download" model="ir.cron">
+        <field name="name">Orders Download Action</field>
+        <field name="model_id" ref="model_woocommerce_main"/>
+        <field name="state">code</field>
+        <field name="code">model.run_order_download()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name='interval_number'>10</field>
+        <field name='interval_type'>minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
+    <record id="cron_orders_update" model="ir.cron">
+        <field name="name">Orders Update Action</field>
+        <field name="model_id" ref="model_woocommerce_main"/>
+        <field name="state">code</field>
+        <field name="code">model.run_order_update()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name='interval_number'>5</field>
+        <field name='interval_type'>minutes</field>
+        <field name="numbercall">-1</field>
+        <field name="doall" eval="False"/>
+    </record>
+
+    <record id="view_order_form_inherit" model="ir.ui.view">
+    <field name="name">sale.order.form</field>
+    <field name="model">sale.order</field>
+    <field name="inherit_id" ref="sale.view_order_form"/>
+    <field name="arch" type="xml">
+        <xpath expr="//field[@name='date_order']" position="after">
+            <!-- Added your field -->
+            <field name="source_ecommerce2"/>
+        </xpath>
+    </field>
+</record>
+   <menuitem
+        name="Woocommerce"
+        id="woocommerce_product_add"
+        sequence="1"
+        action="action_add_product_woocommerce"/>
+</odoo>

@@ -19,6 +19,7 @@ class ProductsWoo(models.Model):
     consumer_key = fields.Char("Consumer Key")
     consumer_secret = fields.Char("Consumer Secret")
     company_id = fields.Many2one('res.company')
+    warehouse_id = fields.Many2one('stock.warehouse')
 
     color = fields.Integer(string='Color Index')
     # sub_instance_ids= fields.One2many("woocommerce.sub.instances","main_instances_id",string="Main Instence")

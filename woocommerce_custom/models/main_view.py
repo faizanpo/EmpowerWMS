@@ -148,9 +148,9 @@ class ProductsWoo(models.Model):
                                     bin = base64.b64encode(requests.get(image_url.strip()).content).replace(b"\n", b"")
                                     return bin  # or you could print it
                                 if not wo['sku'] in skuslist:
-                                    categ_id = self.env["product.category"].search([('name','=',category['name'])])
+                                    categ_id = self.env["product.category"].search([('name','=',wo['categories'][0]['name'])])
                                     if not categ_id:
-                                        categ_id=self.env["product.category"].create({"name":category['name']})
+                                        categ_id=self.env["product.category"].create({"name":wo['categories'][0]['name']})
                                     prodcreate={
                                         'name': wo['name'],
                                         'description': wo['description'] if wo['description'] else '',

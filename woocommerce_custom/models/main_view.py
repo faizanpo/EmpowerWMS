@@ -114,7 +114,7 @@ class ProductsWoo(models.Model):
             return 0
 
     def download_product(self):
-        # try:
+        try:
             if self.product_o_w_active:
                 if self.product_o_w_from_date:
                     DN = str(self.product_o_w_from_date.strftime("%Y-%m-%d"))
@@ -141,7 +141,7 @@ class ProductsWoo(models.Model):
                         for wo in allodooproduct:
                             skuslist.append(wo.default_code)
                         for wo in woo_products:
-                            # try:
+                            try:
                                 # print(wo)
                                 # raise UserError(wo)
                                 def pass_image(image_url):                                 
@@ -183,22 +183,22 @@ class ProductsWoo(models.Model):
                                     woocommcreate=self.env['woocommerce.product.down.logs'].create(create_log)
                                     self.product_o_w_from_date = datetime.datetime.now().date()
 
-                            # except Exception as e:
-                            #     print(e)
-                            #     created=self.env['woocommerce.product.down.logs'].create({
-                            #         'woo_id': wo['id'],
-                            #         'sku': wo['sku'],
-                            #         'status': 'error',
-                            #         'details': str(e),
-                            #         'main_id': self.id
-                            #     })
+                            except Exception as e:
+                                print(e)
+                                created=self.env['woocommerce.product.down.logs'].create({
+                                    'woo_id': wo['id'],
+                                    'sku': wo['sku'],
+                                    'status': 'error',
+                                    'details': str(e),
+                                    'main_id': self.id
+                                })
                     else:
                         raise UserError("Date Field Not Set")
                 else:
                     raise UserError("Activate it first!!")
             return 1
-        # except:
-        #     return 0
+        except:
+            return 0
     def update_status(self):
         DN=str(self.orers_w_o_status_from_date.strftime("%Y-%m-%d"))
         anyError=False

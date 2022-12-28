@@ -1,7 +1,6 @@
 import datetime
 
 from odoo import models, fields
-from woocommerce import API
 from odoo.exceptions import UserError
 import base64
 import requests
@@ -19,6 +18,8 @@ class ProductsWoo(models.Model):
     consumer_key = fields.Char("Consumer Key")
     consumer_secret = fields.Char("Consumer Secret")
     company_id = fields.Many2one('res.company')
+    warehouse_id = fields.Many2one('stock.warehouse')
+    location_id = fields.Many2one('stock.location')
 
     color = fields.Integer(string='Color Index')
     # sub_instance_ids= fields.One2many("woocommerce.sub.instances","main_instances_id",string="Main Instence")
@@ -114,6 +115,7 @@ class ProductsWoo(models.Model):
             return 0
 
     def download_product(self):
+            self.update_categories()
         # try:
             if self.product_o_w_active:
                 if self.product_o_w_from_date:
@@ -148,15 +150,17 @@ class ProductsWoo(models.Model):
                                     bin = base64.b64encode(requests.get(image_url.strip()).content).replace(b"\n", b"")
                                     return bin  # or you could print it
                                 if not wo['sku'] in skuslist:
-                                    categ_id = self.env["product.category"].search([('name','=',category['name'])])
-                                    if not categ_id:
-                                        categ_id=self.env["product.category"].create({"name":category['name']})
+                                    categ_id=self.env["product.category"].search([('id','=',1)]) ##selecting default category as 1
+                                    ##if Id provided, we select the first one
+                                    for category in wo["categories"]:
+                                        categ_id = self.env["product.category"].search([('name','=',category['name'])])
+                                        break
                                     prodcreate={
                                         'name': wo['name'],
                                         'description': wo['description'] if wo['description'] else '',
                                         'default_code': wo['sku'],
                                         'type':'product',
-                                            
+                                        "company_id": self.company_id.id,
                                         "categ_id":categ_id.id,
                                         # 'qty_available': float(wo['stock_quantity']),
                                         # 'price': float(wo['regular_price']),
@@ -167,7 +171,7 @@ class ProductsWoo(models.Model):
 
                                     create_quant=self.env['stock.quant'].sudo().create({
                                         'product_id':created.id,
-                                        'location_id':8,
+                                        'location_id':self.location_id.id,
                                         'quantity':float(wo['stock_quantity'])
                                     })
 
@@ -345,18 +349,6 @@ class ProductsWoo(models.Model):
 
         for category in categories:
             self.recursive_add_category_with_parent(category,categories)
-            # category_found = self.env['product.category'].search(['name','=',category['name']])
-            # if not category_found:
-            #     if category['parent'] == 0:
-            #         all_parent_category = self.env['product.category'].search(['name','=','All'])
-            #         category_id = self.env['product.category'].create({'name':category['name'],'parent_id':all_parent_category})
-            #     while category['parent'] != 0 :
-            #         for c in categories:
-            #             if category['parent'] == c['id']:
-            #                 category_id = self.env['product.category'].create({'name':category['name'],'parent_id':c})
-            #                 category = c
-
-        # raise UserError(categories)
         return categories
 
 
@@ -395,7 +387,7 @@ class ProductsWoo(models.Model):
 
                     allodooproduct=prodobj.search([])
                     for wo in allodooproduct:
-                        qty_inv=self.env['stock.quant'].search([('product_id','=',wo.id),('quantity','>=',0),('location_id','=',8)])
+                        qty_inv=self.env['stock.quant'].search([('product_id','=',wo.id),('quantity','>=',0),('location_id','=',self.location_id.id)])
                         skuslist.append(wo.default_code)
                         price_list.append(wo.lst_price)
                         inventory_list.append(qty_inv.available_quantity)
@@ -668,3 +660,263 @@ class ProductsWoo(models.Model):
         orders = self.env['woocommerce.main'].search([])
         for o in orders:
             o.update_status()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###############API#######################
+
+
+
+
+from requests import request
+from json import dumps as jsonencode
+from time import time
+from requests.auth import HTTPBasicAuth
+from urllib.parse import urlencode
+from time import time
+from random import randint
+from hmac import new as HMAC
+from hashlib import sha1, sha256
+from base64 import b64encode
+from collections import OrderedDict
+from urllib.parse import urlencode, quote, unquote, parse_qsl, urlparse
+
+
+class OAuth(object):
+    """ API Class """
+
+    def __init__(self, url, consumer_key, consumer_secret, **kwargs):
+        self.url = url
+        self.consumer_key = consumer_key
+        self.consumer_secret = consumer_secret
+        self.version = kwargs.get("version", "v3")
+        self.method = kwargs.get("method", "GET")
+        self.timestamp = kwargs.get("oauth_timestamp", int(time()))
+
+    def get_oauth_url(self):
+        """ Returns the URL with OAuth params """
+        params = OrderedDict()
+
+        if "?" in self.url:
+            url = self.url[:self.url.find("?")]
+            for key, value in parse_qsl(urlparse(self.url).query):
+                params[key] = value
+        else:
+            url = self.url
+
+        params["oauth_consumer_key"] = self.consumer_key
+        params["oauth_timestamp"] = self.timestamp
+        params["oauth_nonce"] = self.generate_nonce()
+        params["oauth_signature_method"] = "HMAC-SHA256"
+        params["oauth_signature"] = self.generate_oauth_signature(params, url)
+
+        query_string = urlencode(params)
+
+        return f"{url}?{query_string}"
+
+    def generate_oauth_signature(self, params, url):
+        """ Generate OAuth Signature """
+        if "oauth_signature" in params.keys():
+            del params["oauth_signature"]
+
+        base_request_uri = quote(url, "")
+        params = self.sorted_params(params)
+        params = self.normalize_parameters(params)
+        query_params = ["{param_key}%3D{param_value}".format(param_key=key, param_value=value)
+                        for key, value in params.items()]
+
+        query_string = "%26".join(query_params)
+        string_to_sign = f"{self.method}&{base_request_uri}&{query_string}"
+
+        consumer_secret = str(self.consumer_secret)
+        if self.version not in ["v1", "v2"]:
+            consumer_secret += "&"
+
+        hash_signature = HMAC(
+            consumer_secret.encode(),
+            str(string_to_sign).encode(),
+            sha256
+        ).digest()
+
+        return b64encode(hash_signature).decode("utf-8").replace("\n", "")
+
+    @staticmethod
+    def sorted_params(params):
+        ordered = OrderedDict()
+        base_keys = sorted(set(k.split('[')[0] for k in params.keys()))
+
+        for base in base_keys:
+            for key in params.keys():
+                if key == base or key.startswith(base + '['):
+                    ordered[key] = params[key]
+
+        return ordered
+
+    @staticmethod
+    def normalize_parameters(params):
+        """ Normalize parameters """
+        params = params or {}
+        normalized_parameters = OrderedDict()
+
+        def get_value_like_as_php(val):
+            """ Prepare value for quote """
+            try:
+                base = basestring
+            except NameError:
+                base = (str, bytes)
+
+            if isinstance(val, base):
+                return val
+            elif isinstance(val, bool):
+                return "1" if val else ""
+            elif isinstance(val, int):
+                return str(val)
+            elif isinstance(val, float):
+                return str(int(val)) if val % 1 == 0 else str(val)
+            else:
+                return ""
+
+        for key, value in params.items():
+            value = get_value_like_as_php(value)
+            key = quote(unquote(str(key))).replace("%", "%25")
+            value = quote(unquote(str(value))).replace("%", "%25")
+            normalized_parameters[key] = value
+
+        return normalized_parameters
+
+    @staticmethod
+    def generate_nonce():
+        """ Generate nonce number """
+        nonce = ''.join([str(randint(0, 9)) for i in range(8)])
+        return HMAC(
+            nonce.encode(),
+            "secret".encode(),
+            sha1
+        ).hexdigest()
+
+
+
+
+__title__ = "woocommerce-api"
+__version__ = "3.0.0"
+__author__ = "Claudio Sanches @ Automattic"
+__license__ = "MIT"
+
+
+class API(object):
+    """ API Class """
+
+    def __init__(self, url, consumer_key, consumer_secret, **kwargs):
+        self.url = url
+        self.consumer_key = consumer_key
+        self.consumer_secret = consumer_secret
+        self.wp_api = kwargs.get("wp_api", True)
+        self.version = kwargs.get("version", "wc/v3")
+        self.is_ssl = self.__is_ssl()
+        self.timeout = kwargs.get("timeout", 5)
+        self.verify_ssl = kwargs.get("verify_ssl", True)
+        self.query_string_auth = kwargs.get("query_string_auth", False)
+        self.user_agent = kwargs.get("user_agent", f"WooCommerce-Python-REST-API/{__version__}")
+
+    def __is_ssl(self):
+        """ Check if url use HTTPS """
+        return self.url.startswith("https")
+
+    def __get_url(self, endpoint):
+        """ Get URL for requests """
+        url = self.url
+        api = "wc-api"
+
+        if url.endswith("/") is False:
+            url = f"{url}/"
+
+        if self.wp_api:
+            api = "wp-json"
+
+        return f"{url}{api}/{self.version}/{endpoint}"
+
+    def __get_oauth_url(self, url, method, **kwargs):
+        """ Generate oAuth1.0a URL """
+        oauth = OAuth(
+            url=url,
+            consumer_key=self.consumer_key,
+            consumer_secret=self.consumer_secret,
+            version=self.version,
+            method=method,
+            oauth_timestamp=kwargs.get("oauth_timestamp", int(time()))
+        )
+
+        return oauth.get_oauth_url()
+
+    def __request(self, method, endpoint, data, params=None, **kwargs):
+        """ Do requests """
+        if params is None:
+            params = {}
+        url = self.__get_url(endpoint)
+        auth = None
+        headers = {
+            "user-agent": f"{self.user_agent}",
+            "accept": "application/json"
+        }
+
+        if self.is_ssl is True and self.query_string_auth is False:
+            auth = HTTPBasicAuth(self.consumer_key, self.consumer_secret)
+        elif self.is_ssl is True and self.query_string_auth is True:
+            params.update({
+                "consumer_key": self.consumer_key,
+                "consumer_secret": self.consumer_secret
+            })
+        else:
+            encoded_params = urlencode(params)
+            url = f"{url}?{encoded_params}"
+            url = self.__get_oauth_url(url, method, **kwargs)
+
+        if data is not None:
+            data = jsonencode(data, ensure_ascii=False).encode('utf-8')
+            headers["content-type"] = "application/json;charset=utf-8"
+
+        return request(
+            method=method,
+            url=url,
+            verify=self.verify_ssl,
+            auth=auth,
+            params=params,
+            data=data,
+            timeout=self.timeout,
+            headers=headers,
+            **kwargs
+        )
+
+    def get(self, endpoint, **kwargs):
+        """ Get requests """
+        return self.__request("GET", endpoint, None, **kwargs)
+
+    def post(self, endpoint, data, **kwargs):
+        """ POST requests """
+        return self.__request("POST", endpoint, data, **kwargs)
+
+    def put(self, endpoint, data, **kwargs):
+        """ PUT requests """
+        return self.__request("PUT", endpoint, data, **kwargs)
+
+    def delete(self, endpoint, **kwargs):
+        """ DELETE requests """
+        return self.__request("DELETE", endpoint, None, **kwargs)
+
+    def options(self, endpoint, **kwargs):
+        """ OPTIONS requests """
+        return self.__request("OPTIONS", endpoint, None, **kwargs)

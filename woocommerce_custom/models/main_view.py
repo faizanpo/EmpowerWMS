@@ -77,7 +77,7 @@ class ProductsWoo(models.Model):
                     skuslist = []
                     for wd in r:
                         skuslist.append(wd['sku'])
-                    for op in prodobj.search([]):
+                    for op in prodobj.search([("company_id",'=',self.company_id.id)]):
                         if not op.default_code in skuslist:
                             prodcreate = {
                                 'name': op['name'],
@@ -139,7 +139,7 @@ class ProductsWoo(models.Model):
                             r = wcapi.get("products/", params={"per_page": 10, "page": page,"after":DN + "T00:00:00"}).json()
                             woo_products.extend(r)
                         skuslist=[]
-                        allodooproduct=prodobj.search([])
+                        allodooproduct=prodobj.search([('company_id','=',self.company_id.id)])
                         for wo in allodooproduct:
                             skuslist.append(wo.default_code)
                         for wo in woo_products:
@@ -211,7 +211,7 @@ class ProductsWoo(models.Model):
         # 2022-02-19 08:18:02
         # raise UserError(str(self.orers_w_o_status_from_date))
         if self.orders_status_w_o_active:
-            orders=self.env['sale.order'].search([('source_ecommerce2', '=', self.name)])
+            orders=self.env['sale.order'].search([("company_id",'=',self.company_id.id),('source_ecommerce2', '=', self.name)])
             wcapi = API(
                 url=self.url,
                 consumer_key= self.consumer_key,
@@ -386,7 +386,7 @@ class ProductsWoo(models.Model):
                     inventory_list=[]
                     odoo_ids=[]
 
-                    allodooproduct=prodobj.search([])
+                    allodooproduct=prodobj.search([('company_id',"=",self.company_id.id)])
                     for wo in allodooproduct:
                         qty_inv=self.env['stock.quant'].search([('product_id','=',wo.id),('quantity','>=',0),('location_id','=',self.location_id.id)])
                         skuslist.append(wo.default_code)
@@ -482,6 +482,7 @@ class ProductsWoo(models.Model):
                                 'zip': data['postcode'],
                                 'commercial_company_name': data['company'],
                                 'company_type': 'person',
+                                'company_id':self.company_id.id,
                                 'mobile': data['phone'],
                                 'email': data['email'] if 'email' in data.keys() else '',
                                 'type': type
@@ -527,7 +528,7 @@ class ProductsWoo(models.Model):
                                 products = []
                                 product_found=True
                                 for item in wo['line_items']:
-                                    product_id = self.env['product.product'].search([('default_code', '=', item['sku'])])
+                                    product_id = self.env['product.product'].search([("company_id",'=',self.company_id.id),('default_code', '=', item['sku'])])
                                     taxes=product_id.taxes_id.ids
                                     t_inseertt=[]
                                     for t in taxes:
@@ -546,7 +547,7 @@ class ProductsWoo(models.Model):
                                         product_found=False
 
                                 if product_found:
-                                    exisit=self.env['sale.order'].search([('origin','=',wo['id']),('source_ecommerce2','=',self.name)])
+                                    exisit=self.env['sale.order'].search([('origin','=',wo['id']),('company_id','=',self.company_id.id),('source_ecommerce2','=',self.name)])
                                     if not exisit:
                                         order = {
                                             'partner_id': billing_customer,
@@ -557,6 +558,7 @@ class ProductsWoo(models.Model):
                                             'date_order': wo['date_created'].replace('T', ' '),
                                             'order_line': products,
                                             'origin': wo['id'],
+                                            'company_id':self.company_id.id,
                                             #'origin':wo['status'],
                                             'source_ecommerce2':self.name
                                         }

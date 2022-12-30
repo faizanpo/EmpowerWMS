@@ -172,7 +172,7 @@ class ProductsWoo(models.Model):
                                     create_quant=self.env['stock.quant'].sudo().create({
                                         'product_id':created.id,
                                         'location_id':self.location_id.id,
-                                        'quantity':float(wo['stock_quantity'])
+                                        'quantity':0 ## special requirement of empower. Quantity will be zero for the first time. Quantity will be put in manually be user later. 
                                     })
 
                                     create_log={
@@ -200,6 +200,7 @@ class ProductsWoo(models.Model):
                         raise UserError("Date Field Not Set")
                 else:
                     raise UserError("Activate it first!!")
+                self.update_product()
             return 1
         except:
             return 0

@@ -555,7 +555,8 @@ class ProductsWoo(models.Model):
                                         product_data={
                                             "name":item["method_title"],
                                             "default_code": item['method_id'],
-                                            "detailed_type":"service"
+                                            "detailed_type":"service",
+                                            "purchase_ok":False
                                         
                                         }
                                         product_id = self.env['product.product'].create(product_data)

@@ -50,7 +50,7 @@ class ProductsWoo(models.Model):
     orders_status_w_o_active = fields.Boolean("Activate")
     orers_w_o_status_log_ids = fields.One2many("woocommerce.orders.status.logs", "main_id", string="Logs", readonly="True")
     orers_w_o_status_from_date = fields.Date(string="From Date",required=True)
-    
+    categoryUpdate_w_o_active = fields.Boolean("Activate")
     def upload_product(self):
         try:
             if self.product_w_o_active:
@@ -331,26 +331,28 @@ class ProductsWoo(models.Model):
         
 
     def update_categories(self):
-        wcapi = API(
-                url=self.url,
-                consumer_key=self.consumer_key,
-                consumer_secret=self.consumer_secret,
-                version="wc/v3",
-                query_string_auth=True,
-                verify_ssl=False
-                )
-        categories = []
-        page=1
-        while True:
-            response = wcapi.get('products/categories',params={"per_page":10,"page":page}).json()
-            if response==[]:
-                    break
-            categories.extend(response)
-            page=page+1
+        if self.categoryUpdate_w_o_active:
+            wcapi = API(
+                    url=self.url,
+                    consumer_key=self.consumer_key,
+                    consumer_secret=self.consumer_secret,
+                    version="wc/v3",
+                    query_string_auth=True,
+                    verify_ssl=False
+                    )
+            categories = []
+            page=1
+            while True:
+                response = wcapi.get('products/categories',params={"per_page":10,"page":page}).json()
+                if response==[]:
+                        break
+                categories.extend(response)
+                page=page+1
 
-        for category in categories:
-            self.recursive_add_category_with_parent(category,categories)
-        return categories
+            for category in categories:
+                self.recursive_add_category_with_parent(category,categories)
+            return categories
+        return
 
 
 

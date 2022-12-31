@@ -162,6 +162,10 @@
 
                     <page string='Update Categories'>
                         <button string="Force Run" name="update_categories" class="btn-primary" type="object" />
+                        <group>
+                            <field name="categoryUpdate_w_o_active"/>
+
+                            </group>
                     </page>
                   </notebook>
                 </sheet>

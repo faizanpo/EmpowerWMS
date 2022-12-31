@@ -566,6 +566,13 @@ class ProductsWoo(models.Model):
                                             #'origin':wo['status'],
                                             'source_ecommerce2':self.name
                                         }
+                                        ##get any order notes and add them to order internal_notes
+                                        wo_notes=wcapi.get("orders/"+str(wo['id'])+"/notes", params={"per_page": 100}).json()
+                                        note=""
+                                        for wo_note in wo_notes:
+                                            note+=wo_note["note"]+"\n"
+                                        order['internal_note']=note
+                                        ##
 
                                         created=self.env['sale.order'].create(order)
                                         if wo['status']== 'failed':

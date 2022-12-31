@@ -574,7 +574,7 @@ class ProductsWoo(models.Model):
                                             'partner_invoice_id': billing_customer,
                                             'partner_shipping_id': shipping_customer,
                                             # 'pricelist_id': 2,
-                                            'state':'draft',
+                                            'state':'sale',
                                             'payment_method':wo.get('payment_method_title',""),
                                             'date_order': wo['date_created'].replace('T', ' '),
                                             'order_line': products,

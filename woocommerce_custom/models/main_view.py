@@ -570,7 +570,7 @@ class ProductsWoo(models.Model):
                                         wo_notes=wcapi.get("orders/"+str(wo['id'])+"/notes", params={"per_page": 100}).json()
                                         note=""
                                         for wo_note in wo_notes:
-                                            note+=wo_note["note"]+"\n"
+                                            note+=wo_note["note"]+"\n\n"
                                         order['internal_note']=note
                                         ##
 

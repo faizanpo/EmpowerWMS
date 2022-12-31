@@ -548,7 +548,23 @@ class ProductsWoo(models.Model):
                                         products.append((0, 0, x))
                                     else:
                                         product_found=False
-
+                                ## add shipping lines
+                                for item in wo['shipping_lines']:
+                                    product_id = self.env['product.product'].search([("company_id","=",self.company_id.id),('default_code','=',item['method_id'])])
+                                    if not product_id:
+                                        product_data={
+                                            "name":item["method_title"],
+                                            "default_code": item['method_id'],
+                                            "detailed_type":"service"
+                                        
+                                        }
+                                        product_id = self.env['product.product'].create(product_data)
+                                    x = {
+                                            'product_id': product_id.id,
+                                            'product_uom_qty': 1,
+                                            'price_unit': item['total'],
+                                        }
+                                    products.append((0, 0, x))
                                 if product_found:
                                     exisit=self.env['sale.order'].search([('origin','=',wo['id']),('company_id','=',self.company_id.id),('source_ecommerce2','=',self.name)])
                                     if not exisit:
@@ -566,12 +582,8 @@ class ProductsWoo(models.Model):
                                             #'origin':wo['status'],
                                             'source_ecommerce2':self.name
                                         }
-                                        ##get any order notes and add them to order internal_notes
-                                        wo_notes=wcapi.get("orders/"+str(wo['id'])+"/notes", params={"per_page": 100}).json()
-                                        note=""
-                                        for wo_note in wo_notes:
-                                            note+=wo_note["note"]+"\n\n"
-                                        order['internal_note']=note
+                                        
+                                        order['internal_note']=wo["customer_note"]
                                         ##
 
                                         created=self.env['sale.order'].create(order)

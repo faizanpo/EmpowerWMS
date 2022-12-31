@@ -9,6 +9,7 @@ import requests
 class SaleOrder(models.Model):
     _inherit = "sale.order"
     source_ecommerce2 = fields.Char("Source Ecommerce")
+    payment_method = fields.Char("Payment Method")
 
 
 class ProductsWoo(models.Model):

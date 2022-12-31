@@ -558,6 +558,7 @@ class ProductsWoo(models.Model):
                                             'partner_shipping_id': shipping_customer,
                                             # 'pricelist_id': 2,
                                             'state':'draft',
+                                            'payment_method':wo.get('payment_method_title',""),
                                             'date_order': wo['date_created'].replace('T', ' '),
                                             'order_line': products,
                                             'origin': wo['id'],

@@ -558,7 +558,7 @@ class ProductsWoo(models.Model):
                                             "detailed_type":"service",
                                             "purchase_ok":False,
                                             "company_id":self.company_id.id,
-                                            "price_unit":0
+                                            # "price_unit":0
 
                                         
                                         }

@@ -17,6 +17,11 @@ class EgEComInstance(models.Model):
     company_id = fields.Many2one("res.company", String = "Company")
     warehouse_id = fields.Many2one("stock.warehouse", String = "Warehouse")
     location_id = fields.Many2one("stock.location", String = "Location")
+    import_products_in_scheduler=fields.Boolean("Import Product Scheduler Active")
+    export_products_in_scheduler=fields.Boolean("Export Product Scheduler Active")
+    import_customers_in_scheduler=fields.Boolean("Import Customers Scheduler Active")
+    import_orders_in_scheduler=fields.Boolean("Import Orders Scheduler Active")
+    sync_inventory_to_shopify=fields.Boolean("Inventory Sync Active")
 
     def test_connection_of_instance(self):
         if self.provider != "eg_shopify":
@@ -40,3 +45,18 @@ class EgEComInstance(models.Model):
                                         "prefix": "SH",
                                         "padding": 3,
                                         "number_increment": 1})
+
+    def ScheduledActionForShopify(self):
+        shopify_instances=self.env["eg.ecom.instance"].search([('active','=',True)])
+        for shopify_instance in shopify_instances:
+            if shopify_instance.import_products_in_scheduler:
+                self.env["product.template"].import_product_from_shopify(shopify_instance)
+            if shopify_instance.export_products_in_scheduler:
+                self.env["product.template"].export_product_in_shopify(instance_id=shopify_instance)
+            if shopify_instance.import_products_in_scheduler:
+                self.env["res.partner"].import_customer_from_shopify(instance_id=shopify_instance)
+            if shopify_instance.import_products_in_scheduler:
+                self.env["sale.order"].import_sale_order_from_shopify(instance_id=shopify_instance,
+                                                                  product_create=True)
+            if shopify_instance.sync_inventory_to_shopify:
+                self.env["product.template"].SyncInventory(instance_id=shopify_instance)

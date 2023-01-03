@@ -65,7 +65,7 @@ class SaleOrder(models.Model):
                                     [("inst_order_id", "=", str(order.get("id"))),
                                      ("instance_id", "=", instance_id.id)])
                                 if not eg_order_id:  # TODO New Change
-                                    order_id = self.search([("name", "=", order.get("name"))])
+                                    order_id = self.search([("name", "=", order.get("name")),('company_id','=',instance_id.company_id.id)])
                                     eg_journal_id = None
                                     if order.get("gateway"):
                                         gateway = order.get("gateway").capitalize()
@@ -115,6 +115,7 @@ class SaleOrder(models.Model):
                                             order_dict = {"partner_id": partner_id.id,
                                                           "date_order": create_date,
                                                           "shopify_order_notes": notes,
+                                                          'company_id':instance_id.company_id.id,
                                                           "shopify_payment_gateway": payment_gateway_names,
                                                           "partner_invoice_id": billing_partner_id.id,
                                                           "partner_shipping_id": shipping_partner_id.id,

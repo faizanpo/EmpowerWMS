@@ -179,6 +179,7 @@ class ResPartner(models.Model):
     def verify_default_address_import_customer_shopify(self, partner_id=None, default_address=None, eg_partner_id=None,
                                                        instance_id=None, customer=None):
         if partner_id and default_address:
+            partner_id=partner_id[0]
             partner_information = {"name": partner_id.name or "",
                                    "phone": partner_id.phone or "",
                                    "street1": partner_id.street or "",

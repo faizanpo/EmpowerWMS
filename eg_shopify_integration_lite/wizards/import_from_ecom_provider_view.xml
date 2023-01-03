@@ -29,11 +29,11 @@
                 </group>
                 <group attrs="{'invisible': ['|',('provider', '!=', 'eg_shopify'), ('mapping_type', '!=', 'update_import')]}"
                        name="shopify_import_update">
-                    <span style="color:red;">If you use Update Import Feature so Upgrade to Pro Version!!!</span>
+                    <!-- <span style="color:red;">If you use Update Import Feature so Upgrade to Pro Version!!!</span> -->
                 </group>
                 <group attrs="{'invisible': ['|',('provider', '!=', 'eg_shopify'), ('mapping_type', '!=', 'update_export')]}"
                        name="shopify_export_update">
-                    <span style="color:red;">If you use Update Export Feature so Upgrade to Pro Version!!!</span>
+                    <!-- <span style="color:red;">If you use Update Export Feature so Upgrade to Pro Version!!!</span> -->
                 </group>
             </xpath>
         </field>

@@ -15,6 +15,35 @@ _logger = logging.getLogger("=== Import Product Template ===")
 
 class ProductTemplate(models.Model):
     _inherit = "product.template"
+    def SyncInventory(self,instance_id):
+        if not instance_id:
+            return
+        
+        shop_connection = self.get_connection_from_shopify(instance_id=instance_id)
+        if not shop_connection:
+            return
+        
+        shopify_locations=shopify.Location.find()
+        product_products= self.env["product.product"].search([('company_id','=',instance_id.company_id.id)])
+        for product_product in product_products:
+            eg_product_product=self.env["eg.product.product"].search([('odoo_product_id','=',product_product.id)])
+            
+            if not eg_product_product:
+                continue
+            shopify_id=eg_product_product[0].inst_product_id
+            inventory_item_id=eg_product_product[0].inst_inventory_item_id
+            inventory_level = shopify.InventoryLevel()
+            quant=self.env['stock.quant'].search([('product_id','=',product_product.id),('quantity','>=',0),('location_id','=',instance_id.location_id.id)])
+            if not quant:
+                continue
+            available_quantity=quant[0].available_quantity     
+            for location in shopify_locations:
+                inventory_level.set(location_id = location.id, inventory_item_id =inventory_item_id, available = int(available_quantity))
+                break
+                   
+
+
+
 
     def import_product_from_shopify(self, instance_id=None, product_image=None, default_product_id=None):
         status = "no"
@@ -101,6 +130,7 @@ class ProductTemplate(models.Model):
                                                  "company_id": instance_id.company_id.id,
                                                  "description": product.get("body_html"),
                                                  })
+                                            product_tmpl_id.company_id=instance_id.company_id.id
                                     else:
                                         attribute_line_list = self.create_attribute_value_at_import(product=product,
                                                                                                     instance_id=instance_id)
@@ -125,6 +155,8 @@ class ProductTemplate(models.Model):
                                              "description": product.get("body_html"),
                                              "eg_category_id": eg_category_id and eg_category_id.id or None,
                                              })
+                                        product_tmpl_id.company_id=instance_id.company_id.id
+
                                 else:
                                     product_tmpl_id = product_id.product_tmpl_id
                                     create_mapping = self.create_product_variant_at_import(product=product,
@@ -151,6 +183,7 @@ class ProductTemplate(models.Model):
                                              "description": product.get("body_html"),
                                              "eg_category_id": eg_category_id and eg_category_id.id or None
                                              })
+                                        product_tmpl_id.company_id=instance_id.company_id.id
                                         create_variant = self.create_product_variant_at_import(product=product,
                                                                                                instance_id=instance_id,
                                                                                                product_tmpl_id=product_tmpl_id,
@@ -445,8 +478,9 @@ class ProductTemplate(models.Model):
                                          eg_category_id=None, check_attribute_create_mapping=None):
         same_attribute = True
         for image in product.get("images",[]):
-            image_url=image.get("src",'')
-            product_tmpl_id.image_1920 = base64.b64encode(requests.get(image_url.strip()).content).replace(b"\n", b"")
+            temp_image_url=image.get("src",'')
+            product_tmpl_id.image_1920 = base64.b64encode(requests.get(temp_image_url.strip()).content).replace(b"\n", b"")
+            eg_product_template_id.product_tmpl_image=base64.b64encode(requests.get(temp_image_url.strip()).content).replace(b"\n", b"")
                     
         for product_variant in product.get("variants"):
             image_url=""
@@ -455,7 +489,8 @@ class ProductTemplate(models.Model):
                     image_url=image.get("src",'')
                     if image_url!='':
                         break
-
+            if image_url=="":
+                image_url=temp_image_url
 
             # value_list = []
             eg_product_id = None
@@ -505,6 +540,7 @@ class ProductTemplate(models.Model):
                                       "lst_price": product_variant.get("price"),
                                       "barcode": product_variant.get("barcode") or None,
                                       "weight": weight,
+                                      'company_id':instance_id.company_id.id
                                       })
                     eg_value_ids = self.env["eg.attribute.value"].search(
                         [("odoo_attribute_value_id", "in",
@@ -526,11 +562,14 @@ class ProductTemplate(models.Model):
                                                            "eg_value_ids": [(6, 0, eg_value_ids.ids)],
                                                            "eg_category_id": eg_category_id and eg_category_id.id or None,
                                                            })
+                    if image_url!='':
+                        product_var_id.product_image=base64.b64encode(requests.get(image_url.strip()).content).replace(b"\n", b"")
+                        product_var_id.odoo_product_id.image_1920 = base64.b64encode(requests.get(image_url.strip()).content).replace(b"\n", b"")
                     #Asir - on default location Block 10 Street 100 House 46 = 18459557937
                     inventory_level = shopify.InventoryLevel()
-                    if image_url!='':
-                        product_var_id.odoo_product_id.image_1920 = base64.b64encode(requests.get(image_url.strip()).content).replace(b"\n", b"")
-                    inventory_level.set(location_id = 18459557937, inventory_item_id = product_var_id.inst_inventory_item_id, available = 0)
+                    locations = shopify.Location.find()
+                    for location in locations:
+                            inventory_level.set(location_id = location.id, inventory_item_id = product_var_id.inst_inventory_item_id, available = 0)
                     #Asir - set stock.quant line
                     stock_quant_rec = self.env['stock.quant'].create({
                         'location_id': instance_id.location_id.id,
@@ -549,6 +588,7 @@ class ProductTemplate(models.Model):
             product_tmpl_ids = product_tmpl_ids.filtered(lambda l: l.type == "product")
         else:
             product_tmpl_ids = self.search([("type", "=", "product")])
+        # raise UserError(product_tmpl_ids)
         if product_detail:
             for product_tmpl_id in product_tmpl_ids:
                 if product_tmpl_id.product_variant_ids:
@@ -619,12 +659,13 @@ class ProductTemplate(models.Model):
                                                                    "eg_value_ids": [(6, 0, value_list)]}))
 
                         eg_product_tmpl_id.write({"eg_attribute_line_ids": attribute_line_list})
-
+                    # raise UserError("i")
                     eg_product_ids = self.export_product_variant_in_middle_layer(instance_id=instance_id,
                                                                                  eg_product_tmpl_id=eg_product_tmpl_id,
                                                                                  product_tmpl_id=product_tmpl_id,
                                                                                  eg_category_id=eg_category_id)
                 else:
+                    # raise UserError("sdg")
                     eg_product_tmpl_id = self.export_update_product_in_middle_layer(
                         eg_product_tmpl_id=eg_product_tmpl_id)
 
@@ -659,7 +700,9 @@ class ProductTemplate(models.Model):
         eg_product_tmpl_ids = self.env["eg.product.template"].browse(self._context.get("active_ids"))
         if not eg_product_tmpl_ids:
             eg_product_tmpl_ids = self.env["eg.product.template"].search([("instance_id", "=", instance_id.id)])
+        
         if eg_product_tmpl_ids:
+            
             eg_product_tmpl_ids = eg_product_tmpl_ids.filtered(lambda l: not l.inst_product_tmpl_id)
             for eg_product_tmpl_id in eg_product_tmpl_ids:
                 status = "no"

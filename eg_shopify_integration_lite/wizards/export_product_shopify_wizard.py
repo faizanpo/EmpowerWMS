@@ -1,5 +1,5 @@
 from odoo import models, fields
-
+from odoo.exceptions import UserError
 
 class ExportProductShopifyWizard(models.TransientModel):
     _name = "export.product.shopify.wizard"
@@ -9,6 +9,6 @@ class ExportProductShopifyWizard(models.TransientModel):
                                     help="Import product odoo to middle layer if product is mapped so update either create mapping")
 
     def export_product_middle_layer(self):
-        if self.product_detail:
-            self.env["product.template"].export_product_in_middle_layer(instance_id=self.instance_id,
+        raise UserError("kneoign")
+        self.env["product.template"].export_product_in_middle_layer(instance_id=self.instance_id,
                                                                         product_detail=self.product_detail)

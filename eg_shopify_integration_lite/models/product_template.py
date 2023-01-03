@@ -2,7 +2,8 @@ import logging
 
 from odoo import models
 from odoo.exceptions import Warning, UserError
-
+import base64
+import requests
 try:
     import shopify
 except ImportError:
@@ -443,7 +444,19 @@ class ProductTemplate(models.Model):
                                          eg_product_template_id=None, check_attribute=None, new_option_list=None,
                                          eg_category_id=None, check_attribute_create_mapping=None):
         same_attribute = True
+        for image in product.get("images",[]):
+            image_url=image.get("src",'')
+            product_tmpl_id.image_1920 = base64.b64encode(requests.get(image_url.strip()).content).replace(b"\n", b"")
+                    
         for product_variant in product.get("variants"):
+            image_url=""
+            for image in product.get("images",[]):
+                if product_variant.get('id','') in image.get('variant_ids',[]):
+                    image_url=image.get("src",'')
+                    if image_url!='':
+                        break
+
+
             # value_list = []
             eg_product_id = None
             if not check_attribute:
@@ -515,6 +528,8 @@ class ProductTemplate(models.Model):
                                                            })
                     #Asir - on default location Block 10 Street 100 House 46 = 18459557937
                     inventory_level = shopify.InventoryLevel()
+                    if image_url!='':
+                        product_var_id.odoo_product_id.image_1920 = base64.b64encode(requests.get(image_url.strip()).content).replace(b"\n", b"")
                     inventory_level.set(location_id = 18459557937, inventory_item_id = product_var_id.inst_inventory_item_id, available = 0)
                     #Asir - set stock.quant line
                     stock_quant_rec = self.env['stock.quant'].create({

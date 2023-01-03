@@ -115,6 +115,7 @@ class SaleOrder(models.Model):
                                             order_dict = {"partner_id": partner_id.id,
                                                           "date_order": create_date,
                                                           "shopify_order_notes": notes,
+                                                          'state':'sale',
                                                           'company_id':instance_id.company_id.id,
                                                           "shopify_payment_gateway": payment_gateway_names,
                                                           "partner_invoice_id": billing_partner_id.id,

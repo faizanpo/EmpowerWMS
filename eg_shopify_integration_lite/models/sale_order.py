@@ -49,13 +49,22 @@ class SaleOrder(models.Model):
                             response = shopify.draft_order.DraftOrder.find(limit=250)
                     except Exception as e:
                         raise Warning("{}".format(e))
+                    # raise UserError(str(response))
                     if response:
                         tax_add_by = instance_id.tax_add_by
                         if cron == "yes":  # TODO : New Changes by akash
                             last_date_order = datetime.strptime(response[0].created_at[0:19], "%Y-%m-%dT%H:%M:%S")
                             instance_id.write({"spf_last_order_date": last_date_order})
+                        # raise UserError(str())
+                        # raise UserError(str(response[-1].to_dict()))
                         for order in response:
                             order = order.to_dict()
+                            # raise UserError(str(order))
+                            # if order.get('payment_gateway_names'):
+                            #     raise UserError(str(order))
+                            # raise UserError(str(order))
+
+                            # raise UserError(str(order))
                             line_partial = False
                             sale_order_id = None
                             status = "no"
@@ -77,7 +86,9 @@ class SaleOrder(models.Model):
                                             {"odoo_order_id": order_id.id,
                                              "instance_id": instance_id.id,
                                              "shopify_order_notes": order_id.shopify_order_notes,
+                                            #  'payment_method':"hard coded",
                                              "shopify_payment_gateway": order_id.shopify_payment_gateway,
+                                            #  "shopify_payment_gateway": " hard coded",
                                              "eg_account_journal_id": eg_journal_id and eg_journal_id.id or None,
                                              "inst_order_id": str(
                                                  order.get("id")),
@@ -104,6 +115,7 @@ class SaleOrder(models.Model):
                                             shipping_partner_id = self.env[
                                                 "res.partner"].import_customer_from_shopify(
                                                 shipping_partner=True, instance_id=instance_id, order=order)
+                                            # raise UserError(str(shipping_partner_id))
                                         if billing_partner_id and shipping_partner_id:
                                             partner_id = billing_partner_id.parent_id or billing_partner_id or ""
                                         if partner_id:
@@ -112,6 +124,7 @@ class SaleOrder(models.Model):
                                             create_date = create_date[0:19]
                                             create_date = datetime.strptime(create_date,
                                                                             "%Y-%m-%d %H:%M:%S")
+                                              
                                             order_dict = {"partner_id": partner_id.id,
                                                           "date_order": create_date,
                                                           "shopify_order_notes": notes,
@@ -125,6 +138,19 @@ class SaleOrder(models.Model):
                                                 order_dict.update({"name": order.get("name")})
                                             order_id = self.create([order_dict])
                                             product_list = []
+
+                                            # Add Shipping Lines
+                                            shipping_product = self.env['product.product'].search([('name','=','shipping_product')])
+                                            if not shipping_product:
+                                                shipping_product = self.env['product.product'].create({
+                                                    "name":"shipping_product"
+                                                })
+                                            shipping_product.list_price = order.get('shipping_line')['price']
+                                            # raise UserError(str(shipping_product))
+                                            # raise UserError(str(order.get('line_items')[0]))
+                                            order.get("line_items").append(shipping_product)
+
+
                                             for line_item in order.get("line_items"):
                                                 #Asir - adding company_id
                                                 eg_product_id = self.env["eg.product.product"].search(
@@ -159,6 +185,7 @@ class SaleOrder(models.Model):
                                                     order_line_id = self.env["sale.order.line"].create(
                                                         {"product_id": eg_product_id.odoo_product_id.id,
                                                          "name": line_item.get("name"),
+                                                        #  "shipping":order.get('shipping_line')
 
                                                          "product_uom_qty": line_item.get("quantity"),
                                                          "price_unit": line_item.get("price"),

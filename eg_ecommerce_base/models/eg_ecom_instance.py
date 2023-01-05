@@ -13,7 +13,7 @@ class EgEComInstance(models.Model):
     name = fields.Char(string="Name")
     url = fields.Char(string="URL")
     user_id = fields.Many2one(comodel_name="res.users", string="User", default=lambda self: self.env.user.id)
-    inventory_location_id = fields.Many2one(comodel_name="eg.inventory.location", string="Inventory Location")
+    shopify_location_id = fields.Many2one(comodel_name="eg.inventory.location", string="Shopify Location")
     active = fields.Boolean(string="Active", default=True)
     create_date = fields.Datetime(string="Create Date", default=set_date)
     connection_message = fields.Char(string="Connection Message")
@@ -22,6 +22,9 @@ class EgEComInstance(models.Model):
     mapped_product_count = fields.Integer(string="Mapped Product Count", compute="_compute_for_all_count")
     update_product_count = fields.Integer(string="Update Product Count", compute="_compute_for_all_count")
     export_product_count = fields.Integer(string="Export Product Count", compute="_compute_for_all_count")
+
+    # Anique
+    # inventory_location = fields.Many2one('eg.inventory.location')
 
     # add by akash
     eg_product_pricelist_id = fields.Many2one(comodel_name='eg.product.pricelist',

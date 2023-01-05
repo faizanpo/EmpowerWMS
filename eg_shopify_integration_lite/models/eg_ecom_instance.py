@@ -1,5 +1,12 @@
 from odoo import models, fields, api
-
+import logging
+from odoo.exceptions import UserError
+try:
+    import shopify
+except ImportError:
+    raise ImportError(
+        'This module needs shopify library to connect with shopify. Please install ShopifyAPI on your system. (sudo pip3 install ShopifyAPI)')
+_logger = logging.getLogger("=== Import Product Template ===")
 
 class EgEComInstance(models.Model):
     _inherit = "eg.ecom.instance"
@@ -60,3 +67,36 @@ class EgEComInstance(models.Model):
                                                                   product_create=True)
             if shopify_instance.sync_inventory_to_shopify:
                 self.env["product.template"].SyncInventory(instance_id=shopify_instance)
+
+
+    def get_connection_from_shopify(self, instance_id=None):
+        shop_url = "https://{}:{}@{}.myshopify.com/admin/api/{}".format(instance_id.shopify_api_key,
+                                                                        instance_id.shopify_password,
+                                                                        instance_id.shopify_shop,
+                                                                        instance_id.shopify_version)
+        try:
+            shopify.ShopifyResource.set_site(shop_url)
+            connection = True
+        except Exception as e:
+            _logger.info("{}".format(e))
+            connection = False
+        return connection
+
+    def update_shopify_locations(self):
+        connection = self.get_connection_from_shopify(instance_id=self)
+        if not connection:
+            return
+        shopify_locations = shopify.Location.find()
+
+        for location in shopify_locations:
+            existing_location = self.env['eg.inventory.location'].search([('location_id','=',location.id)])
+            if not existing_location:
+                location = location.to_dict()
+                data={}
+                data['location_id'] = location['id']
+                data['instance_id'] = self.id
+                data['name'] = location['name']
+                data['city'] = location['city']
+                self.env['eg.inventory.location'].create(data)
+        # raise UserError(str(shopify_locations))
+        # raise UserError(str("Button Clicked"))

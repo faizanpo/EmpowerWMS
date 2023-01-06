@@ -140,15 +140,15 @@ class SaleOrder(models.Model):
                                             product_list = []
 
                                             # Add Shipping Lines
-                                            shipping_product = self.env['product.product'].search([('name','=','shipping_product')])
-                                            if not shipping_product:
-                                                shipping_product = self.env['product.product'].create({
-                                                    "name":"shipping_product"
-                                                })
-                                            shipping_product.list_price = order.get('shipping_line')['price']
-                                            # raise UserError(str(shipping_product))
-                                            # raise UserError(str(order.get('line_items')[0]))
-                                            order.get("line_items").append(shipping_product)
+                                            # shipping_product = self.env['product.product'].search([('name','=','shipping_product')])
+                                            # if not shipping_product:
+                                            #     shipping_product = self.env['product.product'].create({
+                                            #         "name":"shipping_product"
+                                            #     })
+                                            # shipping_product.list_price = order.get('shipping_line')['price']
+                                            # # raise UserError(str(shipping_product))
+                                            # # raise UserError(str(order.get('line_items')[0]))
+                                            # order.get("line_items").append(shipping_product)
 
 
                                             for line_item in order.get("line_items"):

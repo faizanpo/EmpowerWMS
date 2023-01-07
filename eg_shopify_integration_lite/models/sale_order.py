@@ -49,22 +49,20 @@ class SaleOrder(models.Model):
                             response = shopify.draft_order.DraftOrder.find(limit=250)
                     except Exception as e:
                         raise Warning("{}".format(e))
-                    # raise UserError(str(response))
+                    # payment_term_line = self.env['account.payment.term.line'].search([('days','=',response[-1].to_dict().get('payment_terms')['due_in_days'])])
+                    # payment_term = payment_term_line.payment_id
+                    # raise UserError(str(payment_term))
+                    # raise UserError((response[-1].to_dict().get('payment_terms')['created_at'][:10]))
+
+                    
+                    
                     if response:
                         tax_add_by = instance_id.tax_add_by
                         if cron == "yes":  # TODO : New Changes by akash
                             last_date_order = datetime.strptime(response[0].created_at[0:19], "%Y-%m-%dT%H:%M:%S")
                             instance_id.write({"spf_last_order_date": last_date_order})
-                        # raise UserError(str())
-                        # raise UserError(str(response[-1].to_dict()))
                         for order in response:
                             order = order.to_dict()
-                            # raise UserError(str(order))
-                            # if order.get('payment_gateway_names'):
-                            #     raise UserError(str(order))
-                            # raise UserError(str(order))
-
-                            # raise UserError(str(order))
                             line_partial = False
                             sale_order_id = None
                             status = "no"
@@ -86,9 +84,7 @@ class SaleOrder(models.Model):
                                             {"odoo_order_id": order_id.id,
                                              "instance_id": instance_id.id,
                                              "shopify_order_notes": order_id.shopify_order_notes,
-                                            #  'payment_method':"hard coded",
                                              "shopify_payment_gateway": order_id.shopify_payment_gateway,
-                                            #  "shopify_payment_gateway": " hard coded",
                                              "eg_account_journal_id": eg_journal_id and eg_journal_id.id or None,
                                              "inst_order_id": str(
                                                  order.get("id")),
@@ -118,6 +114,7 @@ class SaleOrder(models.Model):
                                             # raise UserError(str(shipping_partner_id))
                                         if billing_partner_id and shipping_partner_id:
                                             partner_id = billing_partner_id.parent_id or billing_partner_id or ""
+                                        
                                         if partner_id:
                                             create_date = order.get("created_at")
                                             create_date = create_date.replace("T", " ")
@@ -136,19 +133,76 @@ class SaleOrder(models.Model):
                                                           "eg_account_journal_id": eg_journal_id and eg_journal_id.id or None}
                                             if instance_id.spf_order_name == "shopify":
                                                 order_dict.update({"name": order.get("name")})
+
+                                            # Order Payment Terms
+                                            if order.get('payment_terms'):
+                                                if order.get('payment_terms')['payment_terms_type'] == 'receipt':
+                                                    payment_term = self.env['account.payment.term'].search([('name','=','On Receipt')])
+                                                    if not payment_term:
+                                                        payment_term = self.env['account.payment.term'].create({'name':"On Receipt"})
+                                                    order_dict['payment_term_id'] = payment_term.id
+                                                elif order.get('payment_terms')['payment_terms_type'] == 'fulfillment':
+                                                    payment_term = self.env['account.payment.term'].search([('name','=','On Fulfillment')])
+                                                    if not payment_term:
+                                                        payment_term = self.env['account.payment.term'].create({'name':"On Fulfillment"})
+                                                    order_dict['payment_term_id'] = payment_term.id
+                                                elif order.get('payment_terms')['payment_terms_type'] == 'fixed':
+                                                    payment_term = self.env['account.payment.term'].search([('name','=','{}'.format(order.get('payment_terms')['created_at'][:10]))])
+                                                    if not payment_term:
+                                                        payment_term = self.env['account.payment.term'].create({'name':'{}'.format(order.get('payment_terms')['created_at'][:10])})
+                                                    order_dict['payment_term_id'] = payment_term.id
+                                                elif order.get('payment_terms')['payment_terms_type'] == 'net':
+                                                    payment_term_line = self.env['account.payment.term.line'].search([('days','=',order.get('payment_terms')['due_in_days'])])
+                                                    if payment_term_line:
+                                                        payment_term = payment_term_line.payment_id
+                                                        order_dict['payment_term_id'] = payment_term[0].id
+                                                    else:
+                                                        payment_term = self.env['account.payment.term'].create({
+                                                            'name':'{} Days'.format(str(order.get('payment_terms')['due_in_days']))
+                                                            })
+                                                        payment_term_line = self.env['account.payment.term'].create({
+                                                            'days':order.get('payment_terms')['due_in_days'],
+                                                            'payment_id':payment_term.id
+                                                        })
+                                                        order_dict['payment_term_id'] = payment_term.id
+
                                             order_id = self.create([order_dict])
                                             product_list = []
 
-                                            # Add Shipping Lines
-                                            shipping_product = self.env['product.product'].search([('name','=','shipping_product')])
-                                            if not shipping_product:
-                                                shipping_product = self.env['product.product'].create({
-                                                    "name":"shipping_product"
-                                                })
-                                            shipping_product.list_price = order.get('shipping_line')['price']
-                                            # raise UserError(str(shipping_product))
-                                            # raise UserError(str(order.get('line_items')[0]))
-                                            order.get("line_items").append(shipping_product)
+                                            """ Add Shipping Lines - Anique
+                                            If we have a shipping line in the order then we add a shipping_product 
+                                            in the order lines with the appropriate price coming from the shopify order"""
+
+                                            if order.get('shipping_line'):
+                                                shipping_product = self.env['product.product'].search([('name','=',order.get('shipping_line')['title'])])
+                                                if not shipping_product:
+                                                    shipping_product = self.env['product.product'].create({
+                                                        "name":order.get('shipping_line')['title']
+                                                    })
+                                                order_line_id = self.env["sale.order.line"].create(
+                                                            {"product_id": shipping_product.id,
+                                                            "name": shipping_product.name,
+                                                            "product_uom_qty": 1,
+                                                            "price_unit": order.get('shipping_line')['price'],
+                                                            "order_id": order_id.id, })
+
+                                            """Add Discount Lines similiar to shipping lines"""
+                                            if order.get('applied_discount'):
+                                                discount_product = self.env['product.product'].search([('name','=',order.get('applied_discount')['description'])])
+                                                if not discount_product:
+                                                    discount_product = self.env['product.product'].create({
+                                                        "name":order.get('applied_discount')['description']
+                                                    })
+                                                order_line_id = self.env["sale.order.line"].create(
+                                                            {"product_id": discount_product.id,
+                                                            "name": discount_product.name,
+                                                            "product_uom_qty": 1,
+                                                            "price_unit": -float(order.get('applied_discount')['amount']),
+                                                            "order_id": order_id.id, })
+                                            
+                                            
+
+                                           
 
 
                                             for line_item in order.get("line_items"):
@@ -185,8 +239,6 @@ class SaleOrder(models.Model):
                                                     order_line_id = self.env["sale.order.line"].create(
                                                         {"product_id": eg_product_id.odoo_product_id.id,
                                                          "name": line_item.get("name"),
-                                                        #  "shipping":order.get('shipping_line')
-
                                                          "product_uom_qty": line_item.get("quantity"),
                                                          "price_unit": line_item.get("price"),
                                                          "order_id": order_id.id, })

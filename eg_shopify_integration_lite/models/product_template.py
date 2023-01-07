@@ -81,8 +81,7 @@ class ProductTemplate(models.Model):
                             product_list.append(response)
                         else:
                             product_list = response
-                        # raise UserError(str(product_list))
-                        # raise UserError(str(product_list[2].to_dict()['variants'][0]['sku']))
+                        
                         for product in product_list:
                             product = product.to_dict()  # convert into dictionary
                             # raise UserError(str(instance_id.company_id.id))

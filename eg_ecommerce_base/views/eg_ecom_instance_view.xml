@@ -185,7 +185,7 @@
     </record>
 
     <record id="action_eg_ecom_instance_kanban" model="ir.actions.act_window">
-        <field name="name">eCom Dashboard</field>
+        <field name="name">Shopify Dashboard</field>
         <field name="res_model">eg.ecom.instance</field>
         <field name="view_mode">kanban</field>
         <field name="help" type="html">

@@ -52,10 +52,9 @@ class EgEComInstance(models.Model):
                                         "prefix": "SH",
                                         "padding": 3,
                                         "number_increment": 1})
-
-    def ScheduledActionForShopify(self):
-        shopify_instances=self.env["eg.ecom.instance"].search([('active','=',True)])
-        for shopify_instance in shopify_instances:
+    def runSync(self):
+        
+        for shopify_instance in self:
             if shopify_instance.import_products_in_scheduler:
                 self.env["product.template"].import_product_from_shopify(shopify_instance)
             if shopify_instance.export_products_in_scheduler:
@@ -68,6 +67,9 @@ class EgEComInstance(models.Model):
             if shopify_instance.sync_inventory_to_shopify:
                 self.env["product.template"].SyncInventory(instance_id=shopify_instance)
 
+    def ScheduledActionForShopify(self):
+        shopify_instances=self.env["eg.ecom.instance"].search([('active','=',True)])
+        shopify_instances.runSync()   
 
     def get_connection_from_shopify(self, instance_id=None):
         shop_url = "https://{}:{}@{}.myshopify.com/admin/api/{}".format(instance_id.shopify_api_key,

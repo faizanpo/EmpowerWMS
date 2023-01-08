@@ -65,7 +65,7 @@ class EgEComInstance(models.Model):
                 if hasattr(e, 'message'):
                     self.connection_message=e.message
                 else:
-                    self.connection_message=e
+                    self.connection_message="Something is wrong !!! could not connect to shopify"
             
                 
     @api.model

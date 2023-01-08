@@ -29,22 +29,45 @@ class EgEComInstance(models.Model):
     import_customers_in_scheduler=fields.Boolean("Import Customers Scheduler Active")
     import_orders_in_scheduler=fields.Boolean("Import Orders Scheduler Active")
     sync_inventory_to_shopify=fields.Boolean("Inventory Sync Active")
-
+    
+    def get_connection_from_shopify(self, instance_id=None):
+        shop_url = "https://{}:{}@{}.myshopify.com/admin/api/{}".format(instance_id.shopify_api_key,
+                                                                        instance_id.shopify_password,
+                                                                        instance_id.shopify_shop,
+                                                                        instance_id.shopify_version)
+        try:
+            shopify.ShopifyResource.set_site(shop_url)
+            connection = True
+        except Exception as e:
+            _logger.info("{}".format(e))
+            connection = False
+        return connection
     def test_connection_of_instance(self):
         if self.provider != "eg_shopify":
             return super(EgEComInstance, self).test_connection_of_instance()
-        shop_connection = self.env["product.template"].get_connection_from_shopify(instance_id=self)
-        if shop_connection:
-            # self.test_connection = True
-            self.color = 10
-            self.connection_message = "Connection is successful"
-            # message = "Connection is successful"
-        else:
+        shop_connection = self.get_connection_from_shopify(instance_id=self)
+        if not shop_connection:
             # self.test_connection = False
             self.color = 1
-            self.connection_message = "Something is wrong !!! not connect to shopify"
+            self.connection_message = "Something is wrong !!! could not connect to shopify"
             # message = "Something is wrong !!! not connect to shopify"
+        
+        else:
+            try:
 
+                shopify_locations=shopify.Location.find()
+                # self.test_connection = True
+                self.color = 10
+                self.connection_message = "Connection is successful"
+            except Exception as e:
+                # self.test_connection = False
+                self.color = 1
+                if hasattr(e, 'message'):
+                    self.connection_message=e.message
+                else:
+                    self.connection_message=e
+            
+                
     @api.model
     def create_sequence_for_shopify_history(self):
         self.env["ir.sequence"].create({"name": "Shopify History Integration",
@@ -55,17 +78,18 @@ class EgEComInstance(models.Model):
     def runSync(self):
         
         for shopify_instance in self:
-            if shopify_instance.import_products_in_scheduler:
-                self.env["product.template"].import_product_from_shopify(shopify_instance)
-            if shopify_instance.export_products_in_scheduler:
-                self.env["product.template"].export_product_in_shopify(instance_id=shopify_instance)
-            if shopify_instance.import_products_in_scheduler:
-                self.env["res.partner"].import_customer_from_shopify(instance_id=shopify_instance)
-            if shopify_instance.import_products_in_scheduler:
-                self.env["sale.order"].import_sale_order_from_shopify(instance_id=shopify_instance,
-                                                                  product_create=True)
-            if shopify_instance.sync_inventory_to_shopify:
-                self.env["product.template"].SyncInventory(instance_id=shopify_instance)
+            if self.active:
+                if shopify_instance.import_products_in_scheduler:
+                    self.env["product.template"].import_product_from_shopify(shopify_instance)
+                if shopify_instance.export_products_in_scheduler:
+                    self.env["product.template"].export_product_in_shopify(instance_id=shopify_instance)
+                if shopify_instance.import_products_in_scheduler:
+                    self.env["res.partner"].import_customer_from_shopify(instance_id=shopify_instance)
+                if shopify_instance.import_products_in_scheduler:
+                    self.env["sale.order"].import_sale_order_from_shopify(instance_id=shopify_instance,
+                                                                    product_create=True)
+                if shopify_instance.sync_inventory_to_shopify:
+                    self.env["product.template"].SyncInventory(instance_id=shopify_instance)
 
     def ScheduledActionForShopify(self):
         shopify_instances=self.env["eg.ecom.instance"].search([('active','=',True)])

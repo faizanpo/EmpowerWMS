@@ -8,6 +8,9 @@
                 <field name="eg_account_journal_id"/>
                 <field name="shopify_payment_gateway"/>
                 <field name="shopify_order_notes"/>
+                <field name="status_needs_to_be_updated"/>
+                <field name="shopify_status_sync"/>
+                
             </xpath>
         </field>
     </record>

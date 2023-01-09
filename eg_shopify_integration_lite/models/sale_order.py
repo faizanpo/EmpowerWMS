@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
-
-from odoo import models, fields
+import requests
+from odoo import models, fields,api
 from odoo.exceptions import Warning, UserError
 
 try:
@@ -20,6 +20,11 @@ class SaleOrder(models.Model):
     shopify_payment_gateway = fields.Char(String = "Shopify Payment Gateway")
     shopify_order_notes = fields.Char(String = "Shopify Order Notes")
     eg_account_journal_id = fields.Many2one(comodel_name="eg.account.journal", string="Payment Gateway")
+
+    # Anique
+    status_needs_to_be_updated = fields.Boolean(string='Status Needs To Be Updated',default=False)
+    shopify_status_sync = fields.Char(string='Shopify Status Sync')
+
 
     def import_sale_order_from_shopify(self, instance_id=None, product_create=None, product_image=None, cron=None):
         if cron == "yes":  # New Changes by akash
@@ -49,11 +54,6 @@ class SaleOrder(models.Model):
                             response = shopify.draft_order.DraftOrder.find(limit=250)
                     except Exception as e:
                         raise Warning("{}".format(e))
-                    # payment_term_line = self.env['account.payment.term.line'].search([('days','=',response[-1].to_dict().get('payment_terms')['due_in_days'])])
-                    # payment_term = payment_term_line.payment_id
-                    # raise UserError(str(payment_term))
-                    # raise UserError((response[-1].to_dict().get('payment_terms')['created_at'][:10]))
-
                     
                     
                     if response:
@@ -160,10 +160,10 @@ class SaleOrder(models.Model):
                                                         payment_term = self.env['account.payment.term'].create({
                                                             'name':'{} Days'.format(str(order.get('payment_terms')['due_in_days']))
                                                             })
-                                                        # payment_term_line = self.env['account.payment.term.line'].create({
-                                                        #     'days':order.get('payment_terms')['due_in_days'],
-                                                        #     'payment_id':payment_term.id
-                                                        # })
+                                                        payment_term_line = self.env['account.payment.term.line'].create({
+                                                            'days':order.get('payment_terms')['due_in_days'],
+                                                            'payment_id':payment_term.id
+                                                        })
                                                         order_dict['payment_term_id'] = payment_term.id
 
                                             order_id = self.create([order_dict])
@@ -200,10 +200,6 @@ class SaleOrder(models.Model):
                                                             "price_unit": -float(order.get('applied_discount')['amount']),
                                                             "order_id": order_id.id, })
                                             
-                                            
-
-                                           
-
 
                                             for line_item in order.get("line_items"):
                                                 #Asir - adding company_id
@@ -375,3 +371,52 @@ class SaleOrder(models.Model):
                                                              })
                 tax_list.append(tax_id.id)
         return tax_list
+        
+    def sync_status(self,instance_id):
+        # # """The status of the order must sync with order status on shopify"""
+        self.get_connection_from_shopify(instance_id=instance_id)
+        
+        # sale_orders = self.env['sale.order'].search([('status_needs_to_be_updated','=',True)])
+        # for sale_order in sale_orders:
+        #     # raise UserError(sale_order.name)
+        #     eg_sale_order = self.env['eg.sale.order'].search([('odoo_order_id','=',sale_order.id)])
+        #     # raise UserError(str(sale_order.state))
+        #     try:
+        #         shopify_order = shopify.Order.find(eg_sale_order.inst_order_id)
+        #         if sale_order.state =='draft' or sale_order.state =='sent':
+        #             shopify_order.close()
+        #             # shopify_order.status = 'invoice_sent'
+        #         elif sale_order.state =='cancel':
+        #             shopify_order.cancel()
+        #         sale_order.shopify_status_sync = 'Synced'
+        #         shopify_order.save()
+        #     except:
+        #         sale_order.shopify_status_sync = 'Failed to Sync'
+        #     sale_order.status_needs_to_be_updated = False
+        payload={}
+        headers = {
+        'X-Shopify-Access-Token': str(instance_id.shopify_password),
+        'Content-Type': 'application/json',
+        'Cookie': 'request_method=POST'
+        }
+
+        sale_orders = self.env['sale.order'].search([('status_needs_to_be_updated','=',True)])
+        for sale_order in sale_orders:
+            eg_sale_order = self.env['eg.sale.order'].search([('odoo_order_id','=',sale_order.id)])
+            try:
+                shopify_order = shopify.Order.find(eg_sale_order.inst_order_id)
+                if sale_order.state =='cancel':
+                    url = 'https://ghamir.myshopify.com/admin/api/{0}/orders/{1}/{2}.json'.format(instance_id.shopify_version,shopify_order.id,'cancel')
+                    requests.request("POST", url, headers=headers, data=payload)
+                # elif sale_order.state == 'draft' or sale_order.state == 'sent' or sale_order.state == 'sale':
+                #     url = 'https://ghamir.myshopify.com/admin/api/{0}/orders/{1}/{2}.json'.format(instance_id.shopify_version,shopify_order.id,'open')
+                #     requests.request("POST", url, headers=headers, data=payload)
+                elif sale_order.state == 'done':
+                    url = 'https://ghamir.myshopify.com/admin/api/{0}/orders/{1}/{2}.json'.format(instance_id.shopify_version,shopify_order.id,'close')
+                    requests.request("POST", url, headers=headers, data=payload)
+                sale_order.shopify_status_sync = 'Synced'
+            except:
+                sale_order.shopify_status_sync = 'Failed to Sync'
+            sale_order.status_needs_to_be_updated = False
+
+

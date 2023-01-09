@@ -14,3 +14,6 @@ class EgSaleOrder(models.Model):
     #Asir
     shopify_payment_gateway = fields.Char(String = "Shopify Payment Gateway")
     shopify_order_notes = fields.Char(String = "Shopify Order Notes")
+
+    def test(self):
+        self.env["sale.order"].sync_status(instance_id=self)

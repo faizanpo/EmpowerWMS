@@ -24,7 +24,6 @@ class ProductTemplate(models.Model):
             return
         
         shopify_locations=shopify.Location.find()
-        # raise UserError(str(shopify_locations))
         product_products= self.env["product.product"].search([('company_id','=',instance_id.company_id.id)])
         for product_product in product_products:
             eg_product_product=self.env["eg.product.product"].search([('odoo_product_id','=',product_product.id)])
@@ -39,12 +38,6 @@ class ProductTemplate(models.Model):
                 continue
             available_quantity=quant[0].available_quantity     
             inventory_level.set(location_id=instance_id.shopify_location_id.location_id,inventory_item_id =inventory_item_id,available=int(available_quantity))
-            
-            # for location in shopify_locations:
-            #     # self.env['eg.inventory.location'].create()
-            #     inventory_level.set(location_id = location.id, inventory_item_id =inventory_item_id, available = int(available_quantity))
-            #     break
-                   
 
 
 
@@ -70,7 +63,6 @@ class ProductTemplate(models.Model):
                                 response = shopify.Product.find(from_=next_page_url)
                             else:
                                 response = shopify.Product.find(limit=250)
-                                # raise UserError(str(response))
 
                     except Exception as e:
                         raise Warning("{}".format(e))
@@ -81,25 +73,18 @@ class ProductTemplate(models.Model):
                             product_list.append(response)
                         else:
                             product_list = response
-                        
                         for product in product_list:
                             product = product.to_dict()  # convert into dictionary
-                            # raise UserError(str(instance_id.company_id.id))
                             product_template_id = None
                             is_variant = True
                             eg_product_template_id = None
                             eg_product_tmpl_id = self.env["eg.product.template"].search(
                                 [("inst_product_tmpl_id", "=", str(product.get("id"))),
                                  ("instance_id", "=", instance_id.id),("company_id","=",instance_id.company_id.id)])
-                            # raise UserError(str(product['variants'][0]['sku']))
-                            # raise UserError(((not eg_product_tmpl_id) or (eg_product_tmpl_id and not eg_product_tmpl_id.odoo_product_tmpl_id)))
                             if (not eg_product_tmpl_id) or (eg_product_tmpl_id and (not eg_product_tmpl_id.odoo_product_tmpl_id)):
-                                
                                 sku = product.get("variants")[0].get("sku")
-                                # raise UserError(str(sku))
                                 if not sku:
                                     continue
-                                # raise UserError(str(product))
                                 #Asir - appending company with sku
                                 product_id = self.env["product.product"].search([("default_code", "=", sku),("company_id.id", "=", instance_id.company_id.id)])
                                 product_tmpl_id = None

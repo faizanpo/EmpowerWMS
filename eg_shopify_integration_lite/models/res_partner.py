@@ -109,29 +109,29 @@ class ResPartner(models.Model):
             if not partner_id:
                 name = "{} {}".format(customer.get("first_name"),
                                       customer.get("last_name"))
-                country_id = self.env["res.country"].search(
-                    [("code", "=", default_address.get("country_code"))])
-                if not country_id:
-                    country_id = self.env["res.country"].create(
-                        {"name": default_address.get("country_name"),
-                         "code": default_address.get("country_code")})
-                state_id = self.env["res.country.state"].search(
-                    [("code", "=", default_address.get("province_code")), ("country_id", "=", country_id.id)])
-                if not state_id:
-                    state_id = self.env["res.country.state"].create(
-                        {"name": default_address.get("province"),
-                         "code": default_address.get("province_code"),
-                         "country_id": country_id.id})
+                # country_id = self.env["res.country"].search(
+                #     [("code", "=", default_address.get("country_code"))])
+                # if not country_id:
+                #     country_id = self.env["res.country"].create(
+                #         {"name": default_address.get("country_name"),
+                #          "code": default_address.get("country_code")})
+                # state_id = self.env["res.country.state"].search(
+                #     [("code", "=", default_address.get("province_code")), ("country_id", "=", country_id.id)])
+                # if not state_id:
+                #     state_id = self.env["res.country.state"].create(
+                #         {"name": default_address.get("province"),
+                #          "code": default_address.get("province_code"),
+                #          "country_id": country_id.id})
                 partner_id = self.create([{"name": name,
                                            "street": default_address.get("address1") or "",
                                            "street2": default_address.get("address2") or "",
                                            "city": default_address.get("city") or "",
                                            "zip": default_address.get("zip") or "",
-                                           "country_id": country_id and country_id.id or None,
+                                        #    "country_id": country_id and country_id.id or None,
                                            "phone": customer.get("phone") or "",
                                            "email": customer.get("email"),
                                            "company_type": "person",
-                                           "state_id": state_id and state_id.id or None
+                                        #    "state_id": state_id and state_id.id or None
                                            }])
                 eg_partner_id = self.env["eg.res.partner"].create({"odoo_partner_id": partner_id.id,
                                                                    "instance_id": instance_id.id,

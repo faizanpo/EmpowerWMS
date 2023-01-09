@@ -160,10 +160,10 @@ class SaleOrder(models.Model):
                                                         payment_term = self.env['account.payment.term'].create({
                                                             'name':'{} Days'.format(str(order.get('payment_terms')['due_in_days']))
                                                             })
-                                                        payment_term_line = self.env['account.payment.term'].create({
-                                                            'days':order.get('payment_terms')['due_in_days'],
-                                                            'payment_id':payment_term.id
-                                                        })
+                                                        # payment_term_line = self.env['account.payment.term.line'].create({
+                                                        #     'days':order.get('payment_terms')['due_in_days'],
+                                                        #     'payment_id':payment_term.id
+                                                        # })
                                                         order_dict['payment_term_id'] = payment_term.id
 
                                             order_id = self.create([order_dict])

@@ -93,7 +93,8 @@ class EgEComInstance(models.Model):
 
     def ScheduledActionForShopify(self):
         shopify_instances=self.env["eg.ecom.instance"].search([('active','=',True)])
-        shopify_instances.runSync()   
+        for shopifyinstance in shopify_instances:
+             shopifyinstance.runSync()   
 
     def get_connection_from_shopify(self, instance_id=None):
         shop_url = "https://{}:{}@{}.myshopify.com/admin/api/{}".format(instance_id.shopify_api_key,

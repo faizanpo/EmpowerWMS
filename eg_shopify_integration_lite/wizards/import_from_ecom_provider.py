@@ -27,4 +27,4 @@ class ImportFromEComProvider(models.TransientModel):
             self.env["res.partner"].import_customer_from_shopify(instance_id=self.ecom_instance_id)
         if self.spf_import_sale_order:
             self.env["sale.order"].import_sale_order_from_shopify(instance_id=self.ecom_instance_id,
-                                                                  product_create=self.spf_product_create_default_import)  # Add Pro Version product_image=self.spf_product_image_sale
+                                                                  product_create=self.spf_product_create_default_import,cron='yes')  # Add Pro Version product_image=self.spf_product_image_sale

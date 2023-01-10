@@ -375,24 +375,6 @@ class SaleOrder(models.Model):
     def sync_status(self,instance_id):
         # # """The status of the order must sync with order status on shopify"""
         self.get_connection_from_shopify(instance_id=instance_id)
-        
-        # sale_orders = self.env['sale.order'].search([('status_needs_to_be_updated','=',True)])
-        # for sale_order in sale_orders:
-        #     # raise UserError(sale_order.name)
-        #     eg_sale_order = self.env['eg.sale.order'].search([('odoo_order_id','=',sale_order.id)])
-        #     # raise UserError(str(sale_order.state))
-        #     try:
-        #         shopify_order = shopify.Order.find(eg_sale_order.inst_order_id)
-        #         if sale_order.state =='draft' or sale_order.state =='sent':
-        #             shopify_order.close()
-        #             # shopify_order.status = 'invoice_sent'
-        #         elif sale_order.state =='cancel':
-        #             shopify_order.cancel()
-        #         sale_order.shopify_status_sync = 'Synced'
-        #         shopify_order.save()
-        #     except:
-        #         sale_order.shopify_status_sync = 'Failed to Sync'
-        #     sale_order.status_needs_to_be_updated = False
         payload={}
         headers = {
         'X-Shopify-Access-Token': str(instance_id.shopify_password),

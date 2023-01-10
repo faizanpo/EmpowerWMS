@@ -1,7 +1,7 @@
 import logging
 
 from odoo import models
-from odoo.exceptions import Warning
+from odoo.exceptions import Warning, UserError
 
 try:
     import shopify
@@ -98,15 +98,20 @@ class ResPartner(models.Model):
 
     def create_partner_at_import_from_shopify(self, customer=None, instance_id=None, shipping_partner=None,
                                               billing_partner=None, order=None):
+        # raise UserError(str('hi'))
         create_partner = "Customer Is Mapped"
         if billing_partner or shipping_partner:
             customer = order.get("customer")
         eg_partner_id = self.env["eg.res.partner"].search(
             [("inst_partner_id", "=", str(customer.get("id"))), ("instance_id", "=", instance_id.id)])
+        # raise UserError(str(eg_partner_id))
         default_address = customer.get("default_address")
         if not eg_partner_id:
+            # raise UserError(str('hi'))
             partner_id = self.search([("email", "=", customer.get("email"))])
+            # raise UserError(partner_id)
             if not partner_id:
+                
                 name = "{} {}".format(customer.get("first_name"),
                                       customer.get("last_name"))
                 country_id = self.env["res.country"].search(
@@ -122,7 +127,7 @@ class ResPartner(models.Model):
                         {"name": default_address.get("province"),
                          "code": default_address.get("province_code"),
                          "country_id": country_id.id})
-                partner_id = self.create([{"name": name,
+                data={"name": name,
                                            "street": default_address.get("address1") or "",
                                            "street2": default_address.get("address2") or "",
                                            "city": default_address.get("city") or "",
@@ -132,7 +137,9 @@ class ResPartner(models.Model):
                                            "email": customer.get("email"),
                                            "company_type": "person",
                                            "state_id": state_id and state_id.id or None
-                                           }])
+                                           }
+                raise UserError(data)
+                partner_id = self.create([data])
                 eg_partner_id = self.env["eg.res.partner"].create({"odoo_partner_id": partner_id.id,
                                                                    "instance_id": instance_id.id,
                                                                    "inst_partner_id": str(

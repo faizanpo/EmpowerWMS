@@ -68,7 +68,7 @@ class EgEComInstance(models.Model):
                 self.env["res.partner"].import_customer_from_shopify(instance_id=shopify_instance)
             if shopify_instance.import_products_in_scheduler:
                 self.env["sale.order"].import_sale_order_from_shopify(instance_id=shopify_instance,
-                                                                  product_create=True,cron="yes")
+                                                                  product_create=True)
             if shopify_instance.sync_inventory_to_shopify:
                 self.env["product.template"].SyncInventory(instance_id=shopify_instance)
 

@@ -128,18 +128,20 @@ class ResPartner(models.Model):
                          "code": default_address.get("province_code"),
                          "country_id": country_id.id})
                 data={"name": name,
-                                           "street": default_address.get("address1") or "",
-                                           "street2": default_address.get("address2") or "",
-                                           "city": default_address.get("city") or "",
-                                           "zip": default_address.get("zip") or "",
-                                           "country_id": country_id and country_id.id or None,
-                                           "phone": customer.get("phone") or "",
-                                           "email": customer.get("email"),
-                                           "company_type": "person",
-                                           "state_id": state_id and state_id.id or None
-                                           }
-                raise UserError(str(data))
-                partner_id = self.create([data])
+                       "street": default_address.get("address1") or "",
+                       "street2": default_address.get("address2") or "",
+                       "city": default_address.get("city") or "",
+                       "zip": default_address.get("zip") or "",
+                       "country_id": country_id and country_id.id or None,
+                       "phone": customer.get("phone") or "",
+                       "email": customer.get("email"),
+                       "company_type": "person",
+                       "state_id": state_id and state_id.id or None
+                }
+                try:
+                    partner_id = self.create(data)
+                except:
+                    raise UserError(str(data))
                 eg_partner_id = self.env["eg.res.partner"].create({"odoo_partner_id": partner_id.id,
                                                                    "instance_id": instance_id.id,
                                                                    "inst_partner_id": str(

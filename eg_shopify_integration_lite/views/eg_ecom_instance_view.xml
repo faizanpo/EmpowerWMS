@@ -13,7 +13,7 @@
                         <label for='shopify_location_id'/>
                         <div class="o_row">
                         <!-- <label for='shopify_location_id'/> -->
-                            <field name="shopify_location_id"/>
+                            <field name="shopify_location_id" domain="[('instance_id','=',id)]"/>
                             <button name="update_shopify_locations" string="Update Shopify Locations" class="oe_highlight" type="object"/>
                         </div>
                         <field name="shopify_api_key" attrs="{'required': [('provider', '=', 'eg_shopify')]}"/>

@@ -138,7 +138,7 @@ class ResPartner(models.Model):
                                            "company_type": "person",
                                            "state_id": state_id and state_id.id or None
                                            }
-                raise UserError(data)
+                raise UserError(str(data))
                 partner_id = self.create([data])
                 eg_partner_id = self.env["eg.res.partner"].create({"odoo_partner_id": partner_id.id,
                                                                    "instance_id": instance_id.id,

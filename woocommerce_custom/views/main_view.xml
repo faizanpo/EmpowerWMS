@@ -174,7 +174,7 @@
     </record>
 
     <record id="action_add_product_woocommerce" model="ir.actions.act_window">
-        <field name="name">Woo Commerce Instances</field>
+        <field name="name">WooCommerce Instances</field>
         <field name="type">ir.actions.act_window</field>
         <field name="res_model">woocommerce.main</field>
         <field name="view_mode">kanban,form,tree</field>

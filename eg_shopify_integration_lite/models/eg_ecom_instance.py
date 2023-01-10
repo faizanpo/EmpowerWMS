@@ -56,6 +56,7 @@ class EgEComInstance(models.Model):
     
     def test(self):
         self.env["sale.order"].sync_status(instance_id=self)
+
     def Run(self):
         for rec in self:
             if rec.active:

@@ -38,7 +38,7 @@
                 </page>
             </xpath>
             <xpath expr="//button[@name='test_connection_of_instance']" position="after">
-                  <button name="runSync" string="Run Manually" class="oe_highlight" type="object"/>
+                  <button name="Run" string="Run Manually" class="oe_highlight" type="object"/>
             </xpath>
         </field>
     </record>

@@ -56,22 +56,27 @@ class EgEComInstance(models.Model):
     
     def test(self):
         self.env["sale.order"].sync_status(instance_id=self)
+    def Run(self):
+        for rec in self:
+            if rec.active:
+                if rec.import_products_in_scheduler:
+                    self.env["product.template"].import_product_from_shopify(rec)
+                if rec.export_products_in_scheduler:
+                    self.env["product.template"].export_product_in_shopify(instance_id=rec)
+                if rec.import_products_in_scheduler:
+                    self.env["res.partner"].import_customer_from_shopify(instance_id=rec)
+                if rec.import_products_in_scheduler:
+                    self.env["sale.order"].import_sale_order_from_shopify(instance_id=rec,
+                                                                    product_create=True)
+                if rec.sync_inventory_to_shopify:
+                    self.env["product.template"].SyncInventory(instance_id=rec)
+
+
                                                                   
     def ScheduledActionForShopify(self):
         shopify_instances=self.env["eg.ecom.instance"].search([('active','=',True)])
         for shopify_instance in shopify_instances:
-            if shopify_instance.import_products_in_scheduler:
-                self.env["product.template"].import_product_from_shopify(shopify_instance)
-            if shopify_instance.export_products_in_scheduler:
-                self.env["product.template"].export_product_in_shopify(instance_id=shopify_instance)
-            if shopify_instance.import_products_in_scheduler:
-                self.env["res.partner"].import_customer_from_shopify(instance_id=shopify_instance)
-            if shopify_instance.import_products_in_scheduler:
-                self.env["sale.order"].import_sale_order_from_shopify(instance_id=shopify_instance,
-                                                                  product_create=True)
-            if shopify_instance.sync_inventory_to_shopify:
-                self.env["product.template"].SyncInventory(instance_id=shopify_instance)
-
+            shopify_instance.Run()
 
     def get_connection_from_shopify(self, instance_id=None):
         shop_url = "https://{}:{}@{}.myshopify.com/admin/api/{}".format(instance_id.shopify_api_key,

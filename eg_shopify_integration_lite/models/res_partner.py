@@ -106,6 +106,7 @@ class ResPartner(models.Model):
             [("inst_partner_id", "=", str(customer.get("id"))), ("instance_id", "=", instance_id.id)])
         # raise UserError(str(eg_partner_id))
         default_address = customer.get("default_address")
+        raise UserError(str(default_address))
         if not eg_partner_id:
             # raise UserError(str('hi'))
             partner_id = self.search([("email", "=", customer.get("email"))])

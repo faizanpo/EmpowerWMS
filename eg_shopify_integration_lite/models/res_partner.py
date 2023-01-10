@@ -123,10 +123,15 @@ class ResPartner(models.Model):
                 state_id = self.env["res.country.state"].search(
                     [("code", "=", default_address.get("province_code")), ("country_id", "=", country_id.id)])
                 if not state_id:
-                    state_id = self.env["res.country.state"].create(
-                        {"name": default_address.get("province"),
+                    try:
+                        state_id = self.env["res.country.state"].create(
+                            {"name": default_address.get("province"),
+                            "code": default_address.get("province_code"),
+                            "country_id": country_id.id})
+                    except:
+                        raise UserError(str({"name": default_address.get("province"),
                          "code": default_address.get("province_code"),
-                         "country_id": country_id.id})
+                         "country_id": country_id.id}))
                 data={"name": name,
                        "street": default_address.get("address1") or "",
                        "street2": default_address.get("address2") or "",
@@ -138,10 +143,9 @@ class ResPartner(models.Model):
                        "company_type": "person",
                        "state_id": state_id and state_id.id or None
                 }
-                try:
-                    partner_id = self.create(data)
-                except:
-                    raise UserError(str(data))
+                
+                partner_id = self.create(data)
+                
                 eg_partner_id = self.env["eg.res.partner"].create({"odoo_partner_id": partner_id.id,
                                                                    "instance_id": instance_id.id,
                                                                    "inst_partner_id": str(

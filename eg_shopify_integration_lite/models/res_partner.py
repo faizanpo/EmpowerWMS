@@ -98,60 +98,64 @@ class ResPartner(models.Model):
 
     def create_partner_at_import_from_shopify(self, customer=None, instance_id=None, shipping_partner=None,
                                               billing_partner=None, order=None):
-        # raise UserError(str('hi'))
         create_partner = "Customer Is Mapped"
         if billing_partner or shipping_partner:
             customer = order.get("customer")
         eg_partner_id = self.env["eg.res.partner"].search(
             [("inst_partner_id", "=", str(customer.get("id"))), ("instance_id", "=", instance_id.id)])
-        # raise UserError(str(eg_partner_id))
         default_address = customer.get("default_address")
-        # raise UserError(str(default_address))
+        # raise UserError(str(default_address ))
+
         if not eg_partner_id:
-            # raise UserError(str('hi'))
             partner_id = self.search([("email", "=", customer.get("email"))])
-            # raise UserError(partner_id)
             if not partner_id:
-                
                 name = "{} {}".format(customer.get("first_name"),
                                       customer.get("last_name"))
-                country_id = self.env["res.country"].search(
-                    [("code", "=", default_address.get("country_code"))])
-                if not country_id:
-                    country_id = self.env["res.country"].create(
-                        {"name": default_address.get("country_name"),
-                         "code": default_address.get("country_code")})
-                state_id = self.env["res.country.state"].search(
-                    [("code", "=", default_address.get("province_code")), ("country_id", "=", country_id.id)])
-                if not state_id:
-                    try:
-                        state_id = self.env["res.country.state"].create(
-                            {"name": default_address.get("province"),
-                            "code": default_address.get("province_code"),
-                            "country_id": country_id.id})
-                    except:
-                        raise UserError(str({"name": default_address.get("province"),
-                         "code": default_address.get("province_code"),
-                         "country_id": country_id.id}))
                 data={"name": name,
                        "street": default_address.get("address1") or "",
                        "street2": default_address.get("address2") or "",
                        "city": default_address.get("city") or "",
                        "zip": default_address.get("zip") or "",
-                       "country_id": country_id and country_id.id or None,
+                    #    "country_id": country_id and country_id.id or None,
                        "phone": customer.get("phone") or "",
                        "email": customer.get("email"),
                        "company_type": "person",
-                       "state_id": state_id and state_id.id or None
+                    #    "state_id": state_id and state_id.id or None
                 }
-                
-                partner_id = self.create(data)
-                
-                eg_partner_id = self.env["eg.res.partner"].create({"odoo_partner_id": partner_id.id,
-                                                                   "instance_id": instance_id.id,
-                                                                   "inst_partner_id": str(
-                                                                       customer.get("id")),
-                                                                   "update_required": False})
+                try:
+
+                    country_id = self.env["res.country"].search(
+                        [("code", "=", default_address.get("country_code"))])
+                    if not country_id and default_address.get("country_name"):
+                        country_data = {}
+                        country_data['name'] = default_address.get('country_name')
+                        country_data['code'] = default_address.get('country_code')
+                        if country_data['name'] and country_data['name']!="": 
+                            country_id = self.env["res.country"].create(country_data)
+                            data['country_id'] = country_id.id
+
+
+                    state_id = self.env["res.country.state"].search(
+                        [("code", "=", default_address.get("province_code")), ("country_id", "=", country_id.id)])
+                    if not state_id and default_address.get('province'):
+                        country_state_data = {}
+                        country_state_data['name']=default_address.get('province')
+                        country_state_data['code']=default_address.get("province_code")
+                        country_state_data['country_id']=country_id.id
+                        if country_state_data['name'] and country_state_data['name']!="":
+                            state_id = self.env["res.country.state"].create(country_state_data)
+                            data['state_id'] = state_id.id
+                except:
+                    pass
+
+                if default_address.get('province'):
+                    partner_id = self.create(data)
+                    
+                    eg_partner_id = self.env["eg.res.partner"].create({"odoo_partner_id": partner_id.id,
+                                                                    "instance_id": instance_id.id,
+                                                                    "inst_partner_id": str(
+                                                                        customer.get("id")),
+                                                                    "update_required": False})
 
             else:
                 partner_id = self.verify_default_address_import_customer_shopify(partner_id=partner_id,
@@ -232,30 +236,35 @@ class ResPartner(models.Model):
                             return child_id
 
                 if not partner_id.child_ids or create_child:
-                    country_id = self.env["res.country"].search(
-                        [("code", "=", default_address.get("country_code"))])
-                    if not country_id:
-                        country_id = self.env["res.country"].create(
-                            {"name": default_address.get("country_name"),
-                             "code": default_address.get("country_code")})
-                    state_id = self.env["res.country.state"].search(
-                        [("code", "=", default_address.get("province_code")), ("country_id", "=", country_id.id)])
-                    if not state_id:
-                        state_id = self.env["res.country.state"].create(
-                            {"name": default_address.get("province"),
-                             "code": default_address.get("province_code"),
-                             "country_id": country_id.id})
-                    child_partner_id = self.create([{"name": default_address.get("name"),
+                    data={"name": default_address.get("name"),
                                                      "street": default_address.get("address1") or "",
                                                      "street2": default_address.get("address2") or "",
                                                      "city": default_address.get("city") or "",
                                                      "zip": default_address.get("zip") or "",
-                                                     "country_id": country_id and country_id.id or None,
                                                      "phone": default_address.get("phone") or "",
-                                                     "state_id": state_id and state_id.id or None,
                                                      "type": "other",
                                                      "parent_id": partner_id.id
-                                                     }])
+                                                     }
+                    try:
+                        country_id = self.env["res.country"].search(
+                            [("code", "=", default_address.get("country_code"))])
+                        if not country_id and default_address.get("country_name") and default_address.get("country_name")!="":
+                            country_id = self.env["res.country"].create(
+                                {"name": default_address.get("country_name"),
+                                "code": default_address.get("country_code")})
+                            data['country_id'] = country_id.id
+                        state_id = self.env["res.country.state"].search(
+                            [("code", "=", default_address.get("province_code")), ("country_id", "=", country_id.id)])
+                        if not state_id and default_address.get("province") and default_address.get("province")!="":
+                            state_id = self.env["res.country.state"].create(
+                                {"name": default_address.get("province"),
+                                "code": default_address.get("province_code"),
+                                "country_id": country_id.id})
+                            data["state_id"]= state_id.id
+                                                     
+                    except:
+                        pass
+                    child_partner_id = self.create([data])
                     if not eg_partner_id:
                         eg_partner_id = self.env["eg.res.partner"].create({"odoo_partner_id": partner_id.id,
                                                                            "instance_id": instance_id.id,

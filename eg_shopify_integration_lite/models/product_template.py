@@ -25,6 +25,7 @@ class ProductTemplate(models.Model):
         
         shopify_locations=shopify.Location.find()
         product_products= self.env["product.product"].search([('company_id','=',instance_id.company_id.id)])
+    
         for product_product in product_products:
             eg_product_product=self.env["eg.product.product"].search([('odoo_product_id','=',product_product.id)])
             
@@ -38,7 +39,6 @@ class ProductTemplate(models.Model):
                 continue
             available_quantity=quant[0].available_quantity     
             inventory_level.set(location_id=instance_id.shopify_location_id.location_id,inventory_item_id =inventory_item_id,available=int(available_quantity))
-
 
 
 
@@ -566,10 +566,13 @@ class ProductTemplate(models.Model):
                         product_var_id.product_image=base64.b64encode(requests.get(image_url.strip()).content).replace(b"\n", b"")
                         product_var_id.odoo_product_id.image_1920 = base64.b64encode(requests.get(image_url.strip()).content).replace(b"\n", b"")
                     #Asir - on default location Block 10 Street 100 House 46 = 18459557937
-                    inventory_level = shopify.InventoryLevel()
-                    locations = shopify.Location.find()
-                    for location in locations:
-                            inventory_level.set(location_id = location.id, inventory_item_id = product_var_id.inst_inventory_item_id, available = 0)
+                    try:
+                        inventory_level = shopify.InventoryLevel()
+                        locations = shopify.Location.find()
+                        for location in locations:
+                                inventory_level.set(location_id = location.id, inventory_item_id = product_var_id.inst_inventory_item_id, available = 0)
+                    except:
+                        pass
                     #Asir - set stock.quant line
                     stock_quant_rec = self.env['stock.quant'].create({
                         'location_id': instance_id.location_id.id,

@@ -38,9 +38,11 @@ class ProductTemplate(models.Model):
             if not quant:
                 continue
             available_quantity=quant[0].available_quantity
-            
-            inventory_level.set(location_id=instance_id.shopify_location_id.location_id,inventory_item_id =inventory_item_id,available=int(available_quantity))
-
+            try:
+                inventory_level.set(location_id=instance_id.shopify_location_id.location_id,inventory_item_id =inventory_item_id,available=int(available_quantity))
+            except Exception as e:
+                print(e)
+                
 
 
     def import_product_from_shopify(self, instance_id=None, product_image=None, default_product_id=None):

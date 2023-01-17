@@ -28,7 +28,7 @@ class EgEComInstance(models.Model):
 
     # add by akash
     eg_product_pricelist_id = fields.Many2one(comodel_name='eg.product.pricelist',
-                                              string="eCom Product PriceList")
+                                              string="Shopify Product PriceList")
 
     def _compute_for_all_count(self):
         for rec in self:

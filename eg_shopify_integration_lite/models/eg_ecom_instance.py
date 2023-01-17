@@ -18,7 +18,7 @@ class EgEComInstance(models.Model):
     shopify_shop = fields.Char(string="Shop Name")
     spf_order_name = fields.Selection([("odoo", "By Odoo"), ("shopify", "By Shopify")], string="Sale Order Name")
     tax_add_by = fields.Selection([("odoo", "By Odoo"), ("shopify", "By Shopify")], string="Add Tax")
-    spf_last_order_date = fields.Datetime(string="Last Order Date", readonly=True)
+    spf_last_order_date = fields.Datetime(string="Last Order Date")
     export_stock_date = fields.Datetime(string="Last update stock", readonly=True)
     #Asir
     company_id = fields.Many2one("res.company", String = "Company")
@@ -42,7 +42,7 @@ class EgEComInstance(models.Model):
         else:
             # self.test_connection = False
             self.color = 1
-            self.connection_message = "Something is wrong !!! not connect to shopify"
+            self.connection_message = "Something is wrong !!! Could not connect to shopify"
             # message = "Something is wrong !!! not connect to shopify"
 
     @api.model
@@ -68,10 +68,9 @@ class EgEComInstance(models.Model):
                     self.env["res.partner"].import_customer_from_shopify(instance_id=rec)
                 if rec.import_products_in_scheduler:
                     self.env["sale.order"].import_sale_order_from_shopify(instance_id=rec,
-                                                                    product_create=True)
+                                                                    product_create=True,cron='yes')
                 if rec.sync_inventory_to_shopify:
                     self.env["product.template"].SyncInventory(instance_id=rec)
-
 
                                                                   
     def ScheduledActionForShopify(self):

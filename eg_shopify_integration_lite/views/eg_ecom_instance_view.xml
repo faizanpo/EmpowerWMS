@@ -32,7 +32,7 @@
                 <page string="Other Configuration" attrs="{'invisible': [('provider', '!=', 'eg_shopify')]}">
                     <group>
                         <field name="spf_order_name" attrs="{'required': [('provider', '=', 'eg_shopify')]}"/>
-                        <field name="spf_last_order_date"/>
+                        <field name="spf_last_order_date" required='1'/>
                         <field name="tax_add_by" attrs="{'required': [('provider', '=', 'eg_shopify')]}"/>
                     </group>
                 </page>

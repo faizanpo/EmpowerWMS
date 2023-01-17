@@ -27,10 +27,7 @@ class SaleOrder(models.Model):
 
 
     def import_sale_order_from_shopify(self, instance_id=None, product_create=None, product_image=None, cron=None):
-        if cron == "yes":  # New Changes by akash
-            instance_ids = self.env["eg.ecom.instance"].search([])
-        else:
-            instance_ids = [instance_id]
+        instance_ids = [instance_id]
         for instance_id in instance_ids:
             status = "no"
             text = ""
@@ -54,7 +51,6 @@ class SaleOrder(models.Model):
                             response = shopify.draft_order.DraftOrder.find(limit=250)
                     except Exception as e:
                         raise Warning("{}".format(e))
-                    
                     
                     if response:
                         tax_add_by = instance_id.tax_add_by

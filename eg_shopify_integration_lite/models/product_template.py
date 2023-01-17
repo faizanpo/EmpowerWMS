@@ -28,7 +28,7 @@ class ProductTemplate(models.Model):
     
         for product_product in product_products:
             eg_product_product=self.env["eg.product.product"].search([('odoo_product_id','=',product_product.id)])
-            
+
             if not eg_product_product:
                 continue
             shopify_id=eg_product_product[0].inst_product_id
@@ -37,7 +37,8 @@ class ProductTemplate(models.Model):
             quant=self.env['stock.quant'].search([('product_id','=',product_product.id),('quantity','>=',0),('location_id','=',instance_id.location_id.id)])
             if not quant:
                 continue
-            available_quantity=quant[0].available_quantity     
+            available_quantity=quant[0].available_quantity
+            
             inventory_level.set(location_id=instance_id.shopify_location_id.location_id,inventory_item_id =inventory_item_id,available=int(available_quantity))
 
 
@@ -566,20 +567,20 @@ class ProductTemplate(models.Model):
                         product_var_id.product_image=base64.b64encode(requests.get(image_url.strip()).content).replace(b"\n", b"")
                         product_var_id.odoo_product_id.image_1920 = base64.b64encode(requests.get(image_url.strip()).content).replace(b"\n", b"")
                     #Asir - on default location Block 10 Street 100 House 46 = 18459557937
-                    try:
-                        inventory_level = shopify.InventoryLevel()
-                        locations = shopify.Location.find()
-                        for location in locations:
-                                inventory_level.set(location_id = location.id, inventory_item_id = product_var_id.inst_inventory_item_id, available = 0)
-                    except:
-                        pass
-                    #Asir - set stock.quant line
-                    stock_quant_rec = self.env['stock.quant'].create({
-                        'location_id': instance_id.location_id.id,
-                        'product_id': product_var_id.odoo_product_id.id,
-                        'quantity': 0,
-                    })
-                    stock_quant_rec.action_apply_inventory()
+                    if instance_id.sync_inventory_to_shopify:
+                        try:
+                            inventory_level = shopify.InventoryLevel()
+                            locations = shopify.Location.find()
+                            inventory_level.set(location_id = instance_id.shopify_location_id.location_id, inventory_item_id = product_var_id.inst_inventory_item_id, available = 0)
+                        except:
+                            pass
+                        #Asir - set stock.quant line
+                        stock_quant_rec = self.env['stock.quant'].create({
+                            'location_id': instance_id.location_id.id,
+                            'product_id': product_var_id.odoo_product_id.id,
+                            'quantity': 0,
+                        })
+                        stock_quant_rec.action_apply_inventory()
                 else:
                     same_attribute = False
 

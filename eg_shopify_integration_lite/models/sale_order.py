@@ -173,7 +173,8 @@ class SaleOrder(models.Model):
                                                 shipping_product = self.env['product.product'].search([('name','=',order.get('shipping_line')['title'])])
                                                 if not shipping_product:
                                                     shipping_product = self.env['product.product'].create({
-                                                        "name":order.get('shipping_line')['title']
+                                                        "name":order.get('shipping_line')['title'],
+                                                        'company_id':instance_id.company_id
                                                     })
                                                 order_line_id = self.env["sale.order.line"].create(
                                                             {"product_id": shipping_product.id,
@@ -187,7 +188,8 @@ class SaleOrder(models.Model):
                                                 discount_product = self.env['product.product'].search([('name','=',order.get('applied_discount')['description'])])
                                                 if not discount_product:
                                                     discount_product = self.env['product.product'].create({
-                                                        "name":order.get('applied_discount')['description']
+                                                        "name":order.get('applied_discount')['description'],
+                                                        'company_id':instance_id.company_id
                                                     })
                                                 order_line_id = self.env["sale.order.line"].create(
                                                             {"product_id": discount_product.id,
@@ -384,13 +386,10 @@ class SaleOrder(models.Model):
             try:
                 shopify_order = shopify.Order.find(eg_sale_order.inst_order_id)
                 if sale_order.state =='cancel':
-                    url = 'https://ghamir.myshopify.com/admin/api/{0}/orders/{1}/{2}.json'.format(instance_id.shopify_version,shopify_order.id,'cancel')
+                    url = '{0}/admin/api/{1}/orders/{2}/{3}.json'.format(instance_id.url,instance_id.shopify_version,shopify_order.id,'cancel')
                     requests.request("POST", url, headers=headers, data=payload)
-                # elif sale_order.state == 'draft' or sale_order.state == 'sent' or sale_order.state == 'sale':
-                #     url = 'https://ghamir.myshopify.com/admin/api/{0}/orders/{1}/{2}.json'.format(instance_id.shopify_version,shopify_order.id,'open')
-                #     requests.request("POST", url, headers=headers, data=payload)
                 elif sale_order.state == 'done':
-                    url = 'https://ghamir.myshopify.com/admin/api/{0}/orders/{1}/{2}.json'.format(instance_id.shopify_version,shopify_order.id,'close')
+                    url = '{0}/admin/api/{1}/orders/{2}/{3}.json'.format(instance_id.url,instance_id.shopify_version,shopify_order.id,'close')
                     requests.request("POST", url, headers=headers, data=payload)
                 sale_order.shopify_status_sync = 'Synced'
             except:

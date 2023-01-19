@@ -407,7 +407,7 @@ class ProductsWoo(models.Model):
                                         update['regular_price']=str(price_list[i])
                                         
                                         
-                                    if float(wo['stock_quantity']) != float(inventory_list[i]) and self.produpdate_o_w_inventory:
+                                    if wo.get('stock_quantity',None) and float(wo['stock_quantity']) != float(inventory_list[i]) and self.produpdate_o_w_inventory:
                                         
                                         update['stock_quantity'] = str(inventory_list[i])
                                         if details:

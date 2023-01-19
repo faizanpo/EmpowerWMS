@@ -54,8 +54,7 @@ class EgEComInstance(models.Model):
                                         "number_increment": 1})
     
     
-    def test(self):
-        self.env["sale.order"].sync_status(instance_id=self)
+    
 
     def Run(self):
         for rec in self:
@@ -71,6 +70,7 @@ class EgEComInstance(models.Model):
                                                                     product_create=True,cron='yes')
                 if rec.sync_inventory_to_shopify:
                     self.env["product.template"].SyncInventory(instance_id=rec)
+                self.env['sale.order'].sync_status(instance_id=rec)
 
                                                                   
     def ScheduledActionForShopify(self):

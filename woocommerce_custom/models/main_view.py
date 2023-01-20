@@ -5,9 +5,22 @@ from odoo.exceptions import UserError
 import base64
 import requests
 
+class productproduct(models.Model):
+    _inherit = "product.product"
+    source_name=fields.Char('Product Source')
+    woocommerce_instance_id=fields.Many2one('woocommerce.main','WooCommerce Instance')
+        
+
+class ProductTemplate(models.Model):
+    _inherit = "product.template"
+    source_name=fields.Char('Product Source')
+    woocommerce_instance_id=fields.Many2one('woocommerce.main','WooCommerce Instance')
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"
+    
+    source_name=fields.Char('Order Source')
+    woocommerce_instance_id=fields.Many2one('woocommerce.main','WooCommerce Instance')
     source_ecommerce2 = fields.Char("Source Ecommerce")
     payment_method = fields.Char("Payment Method")
 
@@ -72,7 +85,7 @@ class ProductsWoo(models.Model):
                     while r != []:
                         page += 1
                         r = wcapi.get("products/",
-                                      params={"per_page": 10, "page": page, "after": DN + "T00:00:00"}).json()
+                                      params={"per_page": 100, "page": page, "after": DN + "T00:00:00"}).json()
                         woo_products.extend(r)
 
                     skuslist = []
@@ -132,12 +145,12 @@ class ProductsWoo(models.Model):
                     prodobj=self.env['product.product']
                     page=1
                     woo_products=[]
-                    r = wcapi.get("products/", params={"per_page": 10, "page": page,"after":DN + "T00:00:00"}).json()
+                    r = wcapi.get("products/", params={"per_page": 100, "page": page,"after":DN + "T00:00:00"}).json()
                     woo_products.extend(r)
                     if woo_products[0] != 'code':
                         while r != []:
                             page+=1
-                            r = wcapi.get("products/", params={"per_page": 10, "page": page,"after":DN + "T00:00:00"}).json()
+                            r = wcapi.get("products/", params={"per_page": 100, "page": page,"after":DN + "T00:00:00"}).json()
                             woo_products.extend(r)
                         skuslist=[]
                         allodooproduct=prodobj.search([('company_id','=',self.company_id.id)])
@@ -163,6 +176,8 @@ class ProductsWoo(models.Model):
                                         'type':'product',
                                         "company_id": self.company_id.id,
                                         "categ_id":categ_id.id,
+                                        'source_name':"Woocommerce : "+str(self.name),
+                                        'woocommerce_instance_id':self.id,
                                         # 'qty_available': float(wo['stock_quantity']),
                                         # 'price': float(wo['regular_price']),
                                         'list_price': float(wo['regular_price']) if wo['regular_price'] else 0,
@@ -344,7 +359,7 @@ class ProductsWoo(models.Model):
             categories = []
             page=1
             while True:
-                response = wcapi.get('products/categories',params={"per_page":10,"page":page}).json()
+                response = wcapi.get('products/categories',params={"per_page":100,"page":page}).json()
                 if response==[]:
                         break
                 categories.extend(response)
@@ -374,14 +389,14 @@ class ProductsWoo(models.Model):
                 prodobj=self.env['product.product']
                 page=1
                 woo_products=[]
-                r = wcapi.get("products/", params={"per_page": 10, "page": page}).json()
+                r = wcapi.get("products/", params={"per_page": 100, "page": page}).json()
                 woo_products.extend(r)
                 
                 if woo_products[0] != 'code':
                     while r != []:
 
                         page+=1
-                        r = wcapi.get("products/", params={"per_page": 10, "page": page}).json()
+                        r = wcapi.get("products/", params={"per_page": 100, "page": page}).json()
                         woo_products.extend(r)
 
                     skuslist=[]
@@ -559,7 +574,8 @@ class ProductsWoo(models.Model):
                                             "purchase_ok":False,
                                             "company_id":self.company_id.id,
                                             # "price_unit":0
-
+                                            'source_name':"Woocommerce : "+str(self.name),
+                                            'woocommerce_instance_id':self.id,
                                         
                                         }
                                         product_id = self.env['product.product'].create(product_data)
@@ -577,6 +593,8 @@ class ProductsWoo(models.Model):
                                             'partner_invoice_id': billing_customer,
                                             'partner_shipping_id': shipping_customer,
                                             # 'pricelist_id': 2,
+                                            'source_name':"Woocommerce : "+str(self.name),
+                                            'woocommerce_instance_id':self.id,
                                             'state':'sale',
                                             'payment_method':wo.get('payment_method_title',""),
                                             'date_order': wo['date_created'].replace('T', ' '),
@@ -918,18 +936,30 @@ class API(object):
         if data is not None:
             data = jsonencode(data, ensure_ascii=False).encode('utf-8')
             headers["content-type"] = "application/json;charset=utf-8"
+        resp=[]
+        withoutError=True
+        error=""
+        try:
+            resp= request(
+                method=method,
+                url=url,
+                verify=self.verify_ssl,
+                auth=auth,
+                params=params,
+                data=data,
+                timeout=self.timeout,
+                headers=headers,
+                **kwargs
+            )
+        except Exception as e:
+            
+            withoutError=False
+            error=str(e)
+        if not withoutError:
+            raise UserError("Exception on Woocommerce side. Woocommerce API might be down temporarily. Please try again after few hours.\n\n\n" + str(error))
+        
+        return resp
 
-        return request(
-            method=method,
-            url=url,
-            verify=self.verify_ssl,
-            auth=auth,
-            params=params,
-            data=data,
-            timeout=self.timeout,
-            headers=headers,
-            **kwargs
-        )
 
     def get(self, endpoint, **kwargs):
         """ Get requests """

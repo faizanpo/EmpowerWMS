@@ -1,6 +1,5 @@
 import logging
-
-from odoo import models
+from odoo import models, fields, api
 from odoo.exceptions import Warning, UserError
 import base64
 import requests
@@ -12,9 +11,16 @@ except ImportError:
 
 _logger = logging.getLogger("=== Import Product Template ===")
 
+class productproduct(models.Model):
+    _inherit = "product.product"
+    source_name=fields.Char('Product Source')
+    shopify_instance_id=fields.Many2one('eg.ecom.instance','Shopify Instance')
+        
 
 class ProductTemplate(models.Model):
     _inherit = "product.template"
+    source_name=fields.Char('Product Source')
+    shopify_instance_id=fields.Many2one('eg.ecom.instance','Shopify Instance')
     def SyncInventory(self,instance_id):
         if not instance_id:
             return
@@ -113,6 +119,9 @@ class ProductTemplate(models.Model):
                                             product_tmpl_id = self.create([{"name": product.get("title"),
                                                                             "default_code": product_variant.get("sku"),
                                                                             "type": "product",
+                                                                            'source_name':"Shopify : "+instance_id.name,
+                                                                            'shopify_instance_id':instance_id.id,
+                                                                            'company_id':instance_id.company_id.id,
                                                                             "standard_price": product_variant.get(
                                                                                 "compare_at_price") or 0,
                                                                             "list_price": product_variant.get("price"),
@@ -543,6 +552,8 @@ class ProductTemplate(models.Model):
                                       "lst_price": product_variant.get("price"),
                                       "barcode": product_variant.get("barcode") or None,
                                       "weight": weight,
+                                      'source_name':"Shopify : "+instance_id.name,
+                                      'shopify_instance_id':instance_id.id,
                                       'company_id':instance_id.company_id.id
                                       })
                     eg_value_ids = self.env["eg.attribute.value"].search(

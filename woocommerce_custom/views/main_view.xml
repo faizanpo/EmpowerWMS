@@ -256,7 +256,7 @@
             <field name="source_ecommerce2"/>
         </xpath>
     </field>
-</record>
+    </record>
    <menuitem
         name="Woocommerce"
         id="woocommerce_product_add"

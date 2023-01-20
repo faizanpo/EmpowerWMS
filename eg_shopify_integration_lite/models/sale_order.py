@@ -15,7 +15,9 @@ _logger = logging.getLogger("==== Sale Order ====")
 
 class SaleOrder(models.Model):
     _inherit = "sale.order"
-
+    
+    source_name=fields.Char('Order Source')
+    shopify_instance_id=fields.Many2one('eg.ecom.instance','Shopify Instance')
     #Asir
     shopify_payment_gateway = fields.Char(String = "Shopify Payment Gateway")
     shopify_order_notes = fields.Char(String = "Shopify Order Notes")
@@ -122,6 +124,8 @@ class SaleOrder(models.Model):
                                                           "date_order": create_date,
                                                           "shopify_order_notes": notes,
                                                           'state':'sale',
+                                                          'source_name':"Shopify : "+instance_id.name,
+                                                          'shopify_instance_id':instance_id.id,
                                                           'company_id':instance_id.company_id.id,
                                                           "shopify_payment_gateway": payment_gateway_names,
                                                           "partner_invoice_id": billing_partner_id.id,
@@ -174,7 +178,10 @@ class SaleOrder(models.Model):
                                                 if not shipping_product:
                                                     shipping_product = self.env['product.product'].create({
                                                         "name":order.get('shipping_line')['title'],
-                                                        'company_id':instance_id.company_id
+                                                        'company_id':instance_id.company_id.id,
+                                                          'source_name':"Shopify : "+instance_id.name,
+                                                          'shopify_instance_id':instance_id.id,
+                                                          'detailed_type':'service',
                                                     })
                                                 order_line_id = self.env["sale.order.line"].create(
                                                             {"product_id": shipping_product.id,
@@ -185,11 +192,14 @@ class SaleOrder(models.Model):
 
                                             """Add Discount Lines similiar to shipping lines"""
                                             if order.get('applied_discount'):
-                                                discount_product = self.env['product.product'].search([('name','=',order.get('applied_discount')['description'])])
+                                                discount_product = self.env['product.product'].search([('name','=',order.get('applied_discount')['description']),('company_id','=',instance_id.company_id.id)])
                                                 if not discount_product:
                                                     discount_product = self.env['product.product'].create({
                                                         "name":order.get('applied_discount')['description'],
-                                                        'company_id':instance_id.company_id
+                                                        'company_id':instance_id.company_id.id,
+                                                          'source_name':"Shopify : "+instance_id.name,
+                                                          'shopify_instance_id':instance_id.id,
+                                                          'detailed_type':'service',
                                                     })
                                                 order_line_id = self.env["sale.order.line"].create(
                                                             {"product_id": discount_product.id,

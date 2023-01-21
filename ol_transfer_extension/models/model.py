@@ -21,5 +21,5 @@ class sale_order_extension(models.Model):
         for rec in self:
             transfers=self.env['stock.picking'].search([('origin','=',rec.name)])
             for transfer in transfers:
-                transfer.order.date=rec.date_order
+                transfer.order_date=rec.date_order
                 

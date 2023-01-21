@@ -491,8 +491,10 @@ class ProductTemplate(models.Model):
         same_attribute = True
         for image in product.get("images",[]):
             temp_image_url=image.get("src",'')
-            product_tmpl_id.image_1920 = base64.b64encode(requests.get(temp_image_url.strip()).content).replace(b"\n", b"")
-            eg_product_template_id.product_tmpl_image=base64.b64encode(requests.get(temp_image_url.strip()).content).replace(b"\n", b"")
+            if product_tmpl_id:
+                product_tmpl_id.image_1920 = base64.b64encode(requests.get(temp_image_url.strip()).content).replace(b"\n", b"")
+            if eg_product_template_id:
+                eg_product_template_id.product_tmpl_image=base64.b64encode(requests.get(temp_image_url.strip()).content).replace(b"\n", b"")
                     
         for product_variant in product.get("variants"):
             image_url=""

@@ -150,6 +150,9 @@ class ProductTemplate(models.Model):
                                     if attribute_line_list:
                                         product_tmpl_id = self.create([{"name": product.get("title"),
                                                                         "type": "product",
+                                                                        'source_name':"Shopify : "+instance_id.name,
+                                                                        'shopify_instance_id':instance_id.id,
+                                                                        'company_id':instance_id.company_id.id,
                                                                         "attribute_line_ids": attribute_line_list[0]}])
 
                                         eg_product_template_id = self.env["eg.product.template"].create(

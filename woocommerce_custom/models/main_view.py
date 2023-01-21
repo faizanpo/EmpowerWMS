@@ -184,6 +184,9 @@ class ProductsWoo(models.Model):
                                         'image_1920':pass_image(wo['images'][0]['src']) if wo['images'] else False
                                     }
                                     created= prodobj.create(prodcreate)
+                                    created.product_tmpl_id.source_name=created.source_name
+                                    created.product_tmpl_id.woocommerce_instance_id=created.woocommerce_instance_id
+                                    created.product_tmpl_id.company_id=created.company_id
 
                                     create_quant=self.env['stock.quant'].sudo().create({
                                         'product_id':created.id,
@@ -578,7 +581,11 @@ class ProductsWoo(models.Model):
                                             'woocommerce_instance_id':self.id,
                                         
                                         }
+                                        
                                         product_id = self.env['product.product'].create(product_data)
+                                        product_id.product_tmpl_id.source_name=product_id.source_name
+                                        product_id.product_tmpl_id.woocommerce_instance_id=product_id.woocommerce_instance_id
+                                        product_id.product_tmpl_id.company_id=product_id.company_id
                                     x = {
                                             'product_id': product_id.id,
                                             'product_uom_qty': 1,

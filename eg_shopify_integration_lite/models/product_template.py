@@ -549,9 +549,14 @@ class ProductTemplate(models.Model):
                         [("name", "=", product_variant.get("weight_unit")),
                          ("category_id", "=", uom_category_id.id)], limit=1)
                     weight = round(inst_uom_id._compute_quantity(product_variant.get("weight"), uom_id), 2)
+                    price=product_variant.get("price")
+                    try:
+                        price=float(price)
+                    except:
+                        price=0
                     product_id.write({"default_code": product_variant.get("sku"),
                                       "standard_price": product_variant.get("compare_at_price") or 0,
-                                      "lst_price": product_variant.get("price"),
+                                      "lst_price": price,
                                       "barcode": product_variant.get("barcode") or None,
                                       "weight": weight,
                                       'source_name':"Shopify : "+instance_id.name,

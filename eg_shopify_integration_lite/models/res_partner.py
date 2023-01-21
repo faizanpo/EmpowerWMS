@@ -109,6 +109,8 @@ class ResPartner(models.Model):
         if not eg_partner_id:
             partner_id = self.search([("email", "=", customer.get("email"))])
             if not partner_id:
+                partner_id=self.search([('phone','=',customer.get("phone"))])
+            if not partner_id:
                 name = "{} {}".format(customer.get("first_name"),
                                       customer.get("last_name"))
                 data={"name": name,
@@ -148,10 +150,14 @@ class ResPartner(models.Model):
                 except:
                     pass
 
-                if default_address.get('province'):
+                if data['phone']=="" and data['email']=="":
+                    partner_id=self.env['res.partner'].search([('name','=',"Unmappable Customer")])
+                    if not partner_id:
+                        partner_id=self.env['res.partner'].create({'name':"Unmappable Customer"})
+                else:
                     partner_id = self.create(data)
                     
-                    eg_partner_id = self.env["eg.res.partner"].create({"odoo_partner_id": partner_id.id,
+                eg_partner_id = self.env["eg.res.partner"].create({"odoo_partner_id": partner_id.id,
                                                                     "instance_id": instance_id.id,
                                                                     "inst_partner_id": str(
                                                                         customer.get("id")),
@@ -264,7 +270,14 @@ class ResPartner(models.Model):
                                                      
                     except:
                         pass
-                    child_partner_id = self.create([data])
+                    child_partner_id=self.env['res.partner'].search([('phone','=',data['phone']),('parent_id','=',data['parent_id'])])
+                    if not child_partner_id:
+                        if data['phone']=="":
+                            partner_id=self.env['res.partner'].search([('name','=',"Unmappable Customer")])
+                            if not partner_id:
+                                partner_id=self.env['res.partner'].create({'name':"Unmappable Customer"})
+                        else:
+                            child_partner_id = self.create([data])
                     if not eg_partner_id:
                         eg_partner_id = self.env["eg.res.partner"].create({"odoo_partner_id": partner_id.id,
                                                                            "instance_id": instance_id.id,

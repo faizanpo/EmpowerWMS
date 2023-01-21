@@ -14,6 +14,7 @@ class transfer_extension(models.Model):
             sale_order=self.env['sale.order'].search([('name','=',rec.origin)])
             if sale_order:
                 res.order_date=sale_order.date_order
+        return res
 class sale_order_extension(models.Model):
     _inherit = "sale.order"
     @api.onchange('date_order')

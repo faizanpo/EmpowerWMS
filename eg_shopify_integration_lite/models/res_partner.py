@@ -272,11 +272,15 @@ class ResPartner(models.Model):
                         pass
                     child_partner_id=self.env['res.partner'].search([('phone','=',data['phone']),('parent_id','=',data['parent_id'])])
                     if not child_partner_id:
-                        if data['phone']=="":
-                            partner_id=self.env['res.partner'].search([('name','=',"Unmappable Customer")])
-                            if not partner_id:
-                                partner_id=self.env['res.partner'].create({'name':"Unmappable Customer"})
-                        else:
+                        child_partner_id=self.env['res.partner'].search([('phone','=',data['phone']),
+                                                                        ('name','=',data['name'])
+                                                                        ('street','=',data['street'])
+                                                                        ('street2','=',data['street2'])
+                                                                        ('city','=',data['city'])
+                                                                        ('zip','=',data['zip'])
+                                                                        ('parent_id','=',data['parent_id'])
+                                                                        ])
+                    if not child_partner_id:
                             child_partner_id = self.create([data])
                     if not eg_partner_id:
                         eg_partner_id = self.env["eg.res.partner"].create({"odoo_partner_id": partner_id.id,

@@ -554,8 +554,14 @@ class ProductTemplate(models.Model):
                         price=float(price)
                     except:
                         price=0
+                    standardprice=product_variant.get("compare_at_price")
+                    try:
+                        standardprice=float(standardprice)
+                    except:
+                        standardprice=0
+
                     product_id.write({"default_code": product_variant.get("sku"),
-                                      "standard_price": product_variant.get("compare_at_price") or 0,
+                                      "standard_price": standardprice,
                                       "lst_price": price,
                                       "barcode": product_variant.get("barcode") or None,
                                       "weight": weight,

@@ -11,7 +11,7 @@ class productproduct(models.Model):
     woocommerce_instance_id=fields.Many2one('woocommerce.main','WooCommerce Instance')
         
 
-class productproduct(models.Model):
+class respartnerInherit(models.Model):
     _inherit = "res.partner"
     source_name=fields.Char('Contact Source')
     woocommerce_instance_id=fields.Many2one('woocommerce.main','WooCommerce Instance')

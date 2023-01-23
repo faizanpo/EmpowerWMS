@@ -110,9 +110,10 @@ class ResPartner(models.Model):
         # raise UserError(str(default_address ))
 
         if not eg_partner_id:
-            if customer.get("email","")!="":
+        
+            if customer.get("email"):
                 partner_id = self.search([("email", "=", customer.get("email"))])
-            if (not partner_id) and customer.get("phone","")!="":
+            if (not partner_id) and customer.get("phone"):
                 partner_id=self.search([('phone','=',customer.get("phone"))])
             if not partner_id:
                 name = "{} {}".format(customer.get("first_name"),
@@ -290,6 +291,7 @@ class ResPartner(models.Model):
                                                                         ('zip','=',data['zip']),
                                                                         ('parent_id','=',data['parent_id'])
                                                                         ])
+                    
                     if not child_partner_id:
                             child_partner_id = self.create([data])
                     if not eg_partner_id:

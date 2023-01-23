@@ -16,7 +16,7 @@ _logger = logging.getLogger("==== CUSTOMER ====")
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
-    source_name=fields.Char('Contact Source')
+    # source_name=fields.Char('Contact Source')
     shopify_instance_id=fields.Many2one('eg.ecom.instance','Shopify Instance')
     def import_customer_from_shopify(self, instance_id=None, shipping_partner=None, billing_partner=None, order=None):
         status = "no"

@@ -63,8 +63,8 @@ class EgEComInstance(models.Model):
                     self.env["product.template"].import_product_from_shopify(rec)
                 if rec.export_products_in_scheduler:
                     self.env["product.template"].export_product_in_shopify(instance_id=rec)
-                if rec.import_products_in_scheduler:
-                    self.env["res.partner"].import_customer_from_shopify(instance_id=rec)
+                # if rec.import_products_in_scheduler:
+                #     self.env["res.partner"].import_customer_from_shopify(instance_id=rec)
                 if rec.import_products_in_scheduler:
                     self.env["sale.order"].import_sale_order_from_shopify(instance_id=rec,
                                                                     product_create=True,cron='yes')

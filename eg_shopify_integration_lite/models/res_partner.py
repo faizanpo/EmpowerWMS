@@ -3,6 +3,7 @@ import logging
 from odoo import models
 from odoo.exceptions import Warning, UserError
 
+from odoo import models, fields,api
 try:
     import shopify
 except ImportError:
@@ -15,6 +16,8 @@ _logger = logging.getLogger("==== CUSTOMER ====")
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
+    source_name=fields.Char('Contact Source')
+    shopify_instance_id=fields.Many2one('eg.ecom.instance','Shopify Instance')
     def import_customer_from_shopify(self, instance_id=None, shipping_partner=None, billing_partner=None, order=None):
         status = "no"
         text = ""
@@ -122,6 +125,9 @@ class ResPartner(models.Model):
                        "phone": customer.get("phone") or "",
                        "email": customer.get("email"),
                        "company_type": "person",
+                       "company_id":instance_id.company_id.id,
+                       'source_name':"Shopify : "+instance_id.name,
+                       'shopify_instance_id':instance_id.id,
                     #    "state_id": state_id and state_id.id or None
                 }
                 try:
@@ -249,7 +255,10 @@ class ResPartner(models.Model):
                                                      "zip": default_address.get("zip") or "",
                                                      "phone": default_address.get("phone") or "",
                                                      "type": "other",
-                                                     "parent_id": partner_id.id
+                                                     "parent_id": partner_id.id,
+                                                     "company_id":instance_id.company_id.id,
+                                                     'source_name':"Shopify : "+instance_id.name,
+                                                    'shopify_instance_id':instance_id.id,
                                                      }
                     try:
                         country_id = self.env["res.country"].search(

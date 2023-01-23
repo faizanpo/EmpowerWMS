@@ -11,6 +11,12 @@ class productproduct(models.Model):
     woocommerce_instance_id=fields.Many2one('woocommerce.main','WooCommerce Instance')
         
 
+class productproduct(models.Model):
+    _inherit = "res.partner"
+    source_name=fields.Char('Contact Source')
+    woocommerce_instance_id=fields.Many2one('woocommerce.main','WooCommerce Instance')
+        
+
 class ProductTemplate(models.Model):
     _inherit = "product.template"
     source_name=fields.Char('Product Source')
@@ -174,8 +180,8 @@ class ProductsWoo(models.Model):
                                         'description': wo['description'] if wo['description'] else '',
                                         'default_code': wo['sku'],
                                         'type':'product',
-                                        "company_id": self.company_id.id,
                                         "categ_id":categ_id.id,
+                                        "company_id": self.company_id.id,
                                         'source_name':"Woocommerce : "+str(self.name),
                                         'woocommerce_instance_id':self.id,
                                         # 'qty_available': float(wo['stock_quantity']),
@@ -503,10 +509,12 @@ class ProductsWoo(models.Model):
                                 'zip': data['postcode'],
                                 'commercial_company_name': data['company'],
                                 'company_type': 'person',
-                                'company_id':self.company_id.id,
+                                "company_id": self.company_id.id,
+                                'source_name':"Woocommerce : "+str(self.name),
+                                'woocommerce_instance_id':self.id,
                                 'mobile': data['phone'],
                                 'email': data['email'] if 'email' in data.keys() else '',
-                                'type': type
+                                'type': type,
                             }
 
                             created_customer=self.env['res.partner'].create(d_customer)

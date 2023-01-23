@@ -110,8 +110,9 @@ class ResPartner(models.Model):
         # raise UserError(str(default_address ))
 
         if not eg_partner_id:
-            partner_id = self.search([("email", "=", customer.get("email"))])
-            if not partner_id:
+            if customer.get("email")!="":
+                partner_id = self.search([("email", "=", customer.get("email"))])
+            if (not partner_id) and customer.get("phone")!="":
                 partner_id=self.search([('phone','=',customer.get("phone"))])
             if not partner_id:
                 name = "{} {}".format(customer.get("first_name"),

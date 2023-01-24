@@ -8,13 +8,13 @@ class transfer_extension(models.Model):
 
     _inherit = "stock.picking"
     order_date = fields.Datetime(string='Order Date')
-    def create(self,val):
-        res = super(transfer_extension, self).create(val)
-        for rec in res:
-            sale_order=self.env['sale.order'].search([('name','=',rec.origin)])
-            if sale_order:
-                res.order_date=sale_order.date_order
-        return res
+    # def create(self,val=None):
+    #     res = super(transfer_extension, self).create(val)
+    #     for rec in res:
+    #         sale_order=self.env['sale.order'].search([('name','=',rec.origin)])
+    #         if sale_order:
+    #             res.order_date=sale_order.date_order
+    #     return res
 class sale_order_extension(models.Model):
     _inherit = "sale.order"
     @api.onchange('date_order')
